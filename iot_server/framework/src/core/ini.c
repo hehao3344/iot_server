@@ -294,4 +294,3 @@ int ini_sget(ini_t *ini, const char *section, const char *key, const char *scanf
 
     return 1;
 }
-

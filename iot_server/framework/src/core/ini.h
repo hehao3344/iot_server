@@ -9,4 +9,3 @@ const char * ini_get(ini_t *ini, const char *section, const char *key);
 int          ini_sget(ini_t *ini, const char *section, const char *key, const char *scanfmt, void *dst);
 
 #endif
-

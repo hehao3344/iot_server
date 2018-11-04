@@ -1,5 +1,5 @@
-#ifndef _LINUX_LIST_H
-#define _LINUX_LIST_H
+#ifndef __IOT_LIST_H
+#define __IOT_LIST_H
 
 #ifdef WIN32
 #ifndef __inline__

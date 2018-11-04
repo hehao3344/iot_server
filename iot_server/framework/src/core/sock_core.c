@@ -54,7 +54,7 @@ int udp_open(void)
 
 int udp_bind(int sock_fd, unsigned short port)
 {
-    int ret = 0;
+    int ret = -1;
 #ifdef WIN32
     SOCKADDR_IN svr_addr;
     memset(&svr_addr, 0, sizeof(svr_addr));
@@ -65,7 +65,7 @@ int udp_bind(int sock_fd, unsigned short port)
     if (SOCKET_ERROR != bind(sock_fd, (struct sockaddr*)&svr_addr, sizeof(struct sockaddr)))
     {
         debug_print("Bind port %d ok \n", port);
-        ret = 1;
+        ret = 0;
     }
 #else
     struct  sockaddr_in svr_addr;
@@ -77,7 +77,7 @@ int udp_bind(int sock_fd, unsigned short port)
     if (-1 != bind(sock_fd, (struct sockaddr *)&svr_addr, sizeof(struct sockaddr_in)))
     {
         debug_print("bind port %d ok \n", port);
-        ret = 1;
+        ret = 0;
     }
 #endif
 
@@ -93,13 +93,13 @@ int udp_open_bind(unsigned short port)
     if (fd <= 0)
 	{
 	    debug_print("open error \n");
-	    return 0;
+	    return -1;
 	}
     if (0 == udp_bind(fd, port))
     {
         udp_close(fd);
         debug_print("bind error \n");
-        return 0;
+        return -1;
     }
 
     return fd;
@@ -312,18 +312,18 @@ int tcp_open(void)
 int tcp_set_reuse_addr(int sock_fd)
 {
     int reuse = 1;
-    int ret = FALSE;
+    int ret  = -1;
     if (sock_fd > 0)
     {
 #ifdef WIN32
         if (-1 != setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, sizeof(reuse)))
         {
-            ret = TRUE;
+            ret = 0;
         }
 #else // linux
         if (-1 != setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, sizeof(reuse)))
         {
-            ret = TRUE;
+            ret = 0;
         }
 #endif
     }
@@ -339,14 +339,14 @@ int tcp_open_set_reuse_and_bind(unsigned short port)
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd <= 0)
     {
-        return 0;
+        return -1;
     }
 
 #ifdef WIN32
     // set reuse addr param
     if (-1 == setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, sizeof(reuse)))
     {
-        return 0;
+        return -1;
     }
 
     memset(&svr_addr, 0, sizeof(svr_addr));
@@ -367,7 +367,7 @@ int tcp_open_set_reuse_and_bind(unsigned short port)
     // set reuse addr param
     if (-1 == setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&reuse, sizeof(reuse)))
     {
-        return 0;
+        return -1;
     }
 
     bzero(&svr_addr, sizeof(svr_addr));
@@ -391,7 +391,7 @@ int tcp_open_and_bind(unsigned short port)
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd <= 0)
     {
-        return 0;
+        return -1;
     }
 #ifdef WIN32
     memset(&svr_addr, 0, sizeof(svr_addr));
@@ -422,10 +422,10 @@ int tcp_listen(int sock_fd, int count)
 {
     if (listen(sock_fd, count) < 0)
     {
-        return FALSE;
+        return -1;
     }
 
-    return TRUE;
+    return 0;
 }
 
 int tcp_accept(int sock_fd, char *peer_ip, unsigned short *peer_port)
@@ -438,7 +438,7 @@ int tcp_accept(int sock_fd, char *peer_ip, unsigned short *peer_port)
 	len = sizeof(struct sockaddr_in);
 	if ((new_fd = accept(sock_fd, (struct sockaddr *) &addr, (socklen_t *) &len)) < 0)
     {
-		return 0;
+		return -1;
 	}
 
     strcpy(peer_ip, inet_ntoa(addr.sin_addr));
@@ -450,18 +450,18 @@ int tcp_accept(int sock_fd, char *peer_ip, unsigned short *peer_port)
 // ip - host, should convert to network
 int tcp_connect(int sock_fd, char* ip, unsigned short port)
 {
-    int   ret = 0;
+    int     ret = -1;
     struct  sockaddr_in  svr_addr;
 
     svr_addr.sin_family      = AF_INET;
     svr_addr.sin_port        = htons(port);
     svr_addr.sin_addr.s_addr = inet_addr(ip);
 
-    debug_print("Connectting server: %s:%d \n", ip, port);
+    debug_print("connectting server: %s:%d \n", ip, port);
     if (-1 != connect(sock_fd, (struct sockaddr *)&svr_addr, sizeof(struct sockaddr)))
     {
-        debug_print("Connect To Server: %s ok \n", ip);
-        ret = 1;
+        debug_print("connect To Server: %s ok \n", ip);
+        ret = 0;
     }
 
     return ret;
@@ -469,16 +469,16 @@ int tcp_connect(int sock_fd, char* ip, unsigned short port)
 
 int tcp_connect_timeout(int fd, char* ip, unsigned short port, uint msec)
 {
-    int ret = 0;
+    int ret = -1;
     struct timeval tm;
     fd_set w_set;
     struct sockaddr_in svr_addr;
 
 #ifdef WIN32
     uint  flags = 1;
-    if ( 0 != ioctlsocket(fd, FIONBIO, (uint*)&flags))
+    if (0 != ioctlsocket(fd, FIONBIO, (uint*)&flags))
     {
-        return 0;
+        return -1;
     }
 #else
     int flags;
@@ -517,7 +517,7 @@ int tcp_connect_timeout(int fd, char* ip, unsigned short port, uint msec)
             flags &= ~O_NONBLOCK;
             fcntl(fd,F_SETFL, flags); // block mode
 #endif
-            ret = 1;
+            ret = 0;
         }
     }
 
@@ -532,26 +532,26 @@ int tcp_open_connect(char* ip, unsigned short port)
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd <= 0)
 	{
-	    debug_print("Open error \n");
-	    return 0;
+	    debug_print("open error \n");
+	    return -1;
 	}
 
     svr_addr.sin_family      = AF_INET;
     svr_addr.sin_port        = htons(port);
     svr_addr.sin_addr.s_addr = inet_addr(ip);
 
-    if (-1 ==  connect(fd, (struct sockaddr *)&svr_addr, sizeof(struct sockaddr)))
+    if (-1 == connect(fd, (struct sockaddr *)&svr_addr, sizeof(struct sockaddr)))
     {
         debug_print("TCP Connect %s failed \n", ip);
         tcp_close(fd);
-        return 0;
+        return -1;
     }
-    debug_print("Connect To Server: %s ok \n", ip);
+    debug_print("connect to server: %s ok \n", ip);
 
     return fd;
 }
 
-int tcp_open_connect_timeout(char* ip, unsigned short port, uint msec)
+int tcp_open_connect_timeout(char* ip, unsigned short port, unsigned int msec)
 {
     int   fd    = 0;
     uint  flags = 1;
@@ -562,14 +562,14 @@ int tcp_open_connect_timeout(char* ip, unsigned short port, uint msec)
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd <= 0)
 	{
-	    debug_print("Open error \n");
-	    return 0;
+	    debug_print("open error \n");
+	    return -1;
 	}
 
 #ifdef WIN32
     if ( 0 != ioctlsocket(fd, FIONBIO, (uint*)&flags)) // nonblock
     {
-        return 0;
+        return -1;
     }
 #else
     flags = fcntl(fd, F_GETFL, 0);
@@ -592,7 +592,7 @@ int tcp_open_connect_timeout(char* ip, unsigned short port, uint msec)
     {
         debug_print("network error in connect\n");
         tcp_close(fd);
-		return 0;
+		return -1;
     }
     else
     {
@@ -614,11 +614,11 @@ int tcp_open_connect_timeout(char* ip, unsigned short port, uint msec)
         else
         {
             tcp_close(fd);
-			return 0;
+			return -1;
         }
     }
 
-	return 0;
+	return -1;
 }
 
 // return value
@@ -673,14 +673,14 @@ int tcp_recv_timeout(int sock_fd, char *buffer, int len, int msec)
 
 int tcp_get_peer_addr(int sock_fd, char *ip, unsigned short *port)
 {
-    int ret = FALSE;
+    int ret = -1;
     struct  sockaddr_in sa;
     socklen_t len = sizeof(sa);
     if (0 == getpeername(sock_fd, (struct sockaddr *)&sa, &len))
     {
         strcpy(ip, inet_ntoa(sa.sin_addr));
         *port = ntohs(sa.sin_port);
-        ret = TRUE;
+        ret = 0;
     }
 
     return ret;
