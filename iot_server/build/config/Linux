@@ -1,0 +1,41 @@
+# Global definition
+LINUX_KERNEL = /home/hehao/work/simulate/rt5350/RT288x_SDK/source/linux-2.6.21.x
+#LINUX_KERNEL = /home/hehao/working/rt5350/RT288x_SDK/source/linux-2.6.21.x
+
+# Compile tools
+#CROSS_COMPILE	= /opt/buildroot-gcc342/bin/mipsel-linux-
+ROSS_COMPILE	?=
+LD              = $(CROSS_COMPILE)ld
+CC              = $(CROSS_COMPILE)gcc
+CXX             = $(CROSS_COMPILE)g++
+AR              = $(CROSS_COMPILE)ar
+RANLIB          = $(CROSS_COMPILE)ranlib
+NM              = $(CROSS_COMPILE)nm
+STRIP           = $(CROSS_COMPILE)strip
+OBJCOPY         = $(CROSS_COMPILE)objcopy
+OBJDUMP         = $(CROSS_COMPILE)objdump
+
+# Shell script
+MKDIR           = mkdir -p
+SED             = sed
+CAT             = cat
+ECHO            = echo
+RM              = rm -rf
+SET             = set -e
+CP              = cp -rf
+GREP            = grep
+DATE            = date
+
+DEFINES         +=
+
+ifeq ($(CROSS_COMPILE),/opt/buildroot-gcc342/bin/mipsel-linux-)
+CFLAGS          += -DRT_PLATFORM -I$(LINUX_KERNEL)/drivers/char #-I$(LINUX_KERNEL)/include
+endif
+
+# For MATH lib
+MATH_FLAGS      =
+
+CFLAGS          += $(DEFINES) $(MATH_FLAGS) -Wall -DWEBS -DUEMF -DLINUX -D_BSD_SOURCE -DUSER_MANAGEMENT_SUPPORT
+CXXFLAGS        += $(DEFINES) $(MATH_FLAGS) -Wall -DWEBS -DUEMF -DLINUX -D_BSD_SOURCE -DUSER_MANAGEMENT_SUPPORT
+
+LDFLAGS          += -lpthread -lm -L$(LIB_DIR) -lstdc++

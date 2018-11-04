@@ -1,0 +1,59 @@
+#
+# Compile rule definitions for makefiles
+#
+
+#
+# Targets
+#
+.PHONY: all clean debug release
+
+all: $(TARGET_CFG)
+#
+# Create directories if necessary
+#
+.PHONY: objdirs libdirs bindirs
+objdirs: $(OBJPATH_RELEASE_STATIC) $(OBJPATH_DEBUG_STATIC)
+libdirs: objdirs $(LIB_DIR)
+bindirs: objdirs $(BIN_DIR)
+
+$(OBJPATH_RELEASE_STATIC) $(OBJPATH_DEBUG_STATIC):
+	$(MKDIR) $@
+$(LIB_DIR):
+	$(MKDIR) $@
+#
+# Rules for compiling
+#
+$(COM_OBJPATH_STATIC)/%.o: $(SRCS_DIR)/%.cpp $(DEP_DIR)/$(CUR_DIR)/%.d
+	@$(ECHO) "Compiling ... $(notdir $@) "
+	@$(MKDIR) $(@D)
+	@$(ECHO) $(subst $(OBJS_DIR),../Build/Linux,$(@D))
+	@$(CXX) -c $(CXXFLAGS) $< -o $@
+
+$(COM_OBJPATH_STATIC)/%.o: $(SRCS_DIR)/%.c $(DEP_DIR)/$(CUR_DIR)/%.d
+	@$(ECHO) "Compiling ... $(notdir $@) "
+	@$(MKDIR) $(@D)
+	@$(CC) -c $(CFLAGS)  $< -o $@
+
+$(COM_OBJPATH_STATIC)/%.o: $(SRCS_DIR)/%.S $(DEP_DIR)/$(CUR_DIR)/%.d
+	@$(ECHO) "Compiling ... $(notdir $@) "
+	@$(MKDIR) $(@D)
+	@$(CC) -c $(CFLAGS) $< -o $@
+#
+# Rules for creating dependency information
+#
+$(DEP_DIR)/$(CUR_DIR)/%.d: $(SRCS_DIR)/%.cpp
+	@$(ECHO) "Dependence ... $(notdir $@) "
+	@$(MKDIR) $(@D)
+	@$(CXX) -MM $(CXXFLAGS) $< | $(SED) 's,$(*F)\.o[ :]*,$(OBJ_ROOT_DIR)/$(CUR_DIR)$(OBJS_DIR)/$*.o $@ : ,g' > $@
+
+$(DEP_DIR)/$(CUR_DIR)/%.d: $(SRCS_DIR)/%.c
+	@$(ECHO) "Dependence ... $(notdir $@) "
+	@$(MKDIR) $(@D)
+	@$(CC) -MM $(CFLAGS) $< | $(SED) 's,$(*F)\.o[ :]*,$(OBJ_ROOT_DIR)/$(CUR_DIR)$(OBJS_DIR)/$*.o $@ : ,g' > $@
+
+$(DEP_DIR)/$(CUR_DIR)/%.d: $(SRCS_DIR)/%.S
+	@$(ECHO) "Dependence ... $(notdir $@) "
+	@$(MKDIR) $(@D)
+	@$(CC) -MM $(CFLAGS) $< | $(SED) 's,$(*F)\.o[ :]*,$(OBJ_ROOT_DIR)/$(CUR_DIR)$(OBJS_DIR)/$*.o $@ : ,g' > $@
+
+depend: $(addprefix $(DEP_DIR)/$(CUR_DIR)/,$(addsuffix .d,$(objects)))

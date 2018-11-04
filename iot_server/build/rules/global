@@ -1,0 +1,87 @@
+#
+# Check for MKIT_BASE
+#
+ifndef MKIT_BASE
+$(error MKIT_BASE is not defined.)
+endif
+
+# Global config, refer to "./build/config/Config"
+GLOBAL_CONF         =
+
+CONFIG_FILE = $(MKIT_BASE)/build/config/Config
+include       $(CONFIG_FILE)
+
+#DVSDK_PATH = /work/dm368/ti-dvsdk_dm368-evm_4_02_00_06
+#include $(DVSDK_PATH)/Rules.make
+
+ifeq ($(OS_CFG),LINUX)
+#include $(MKIT_BASE)/build/config/Imx
+#include $(MKIT_BASE)/build/config/Blackfin
+#include $(MKIT_BASE)/build/config/GM
+#include $(MKIT_BASE)/build/config/TI
+include $(MKIT_BASE)/build/config/Linux
+endif
+
+# Folder and variable
+SRC_DIR      = $(MKIT_BASE)
+OUT_DIR      = $(MKIT_BASE)/out
+WEB_PAGE_DIR = project/$(PROJECT_CFG)/web
+OUT_REF      = ./out
+LIB_PREFIX   = lib
+WEBS_BIN_DIR = /share/romfs/usr/bin/webs
+
+EXEC_NAME       = $(OUT_DIR)/linux/mkit_msc
+
+INCLUDE_DIR     =   -I$(MKIT_BASE)/framework/include \
+        		    -I$(MKIT_BASE)/framework/src \
+        		    -I$(MKIT_BASE)/framework/src/network \
+        		    -I$(MKIT_BASE)/framework/src/udt \
+        		    -I$(MKIT_BASE)/framework/src/net \
+        		    -I$(MKIT_BASE)/framework/src/link \
+        		    -I$(MKIT_BASE)/framework/src/component \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/src/dlna/include \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/src/airplay \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/src/airplay/dns_sd \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/src/avahi \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG) \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/src \
+                    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/apps/src \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/include \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/inc \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/msg_handle \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/src/avengine/ffmpeg
+
+CPPINCLUDE_DIR  += $(INCLUDE_DIR)
+DEFINES         += -DWEBS -DUEMF -D_BSD_SOURCE -D$(OS_CFG) -D_POSIX -DMICROSTACK_NO_STDAFX
+#DEFINES        += -DMEMORY_CHECK -DUPNP_DEBUG -DMMSCP_LEAN_AND_MEAN -DWITH_VOLUME -DWITH_DISPLAY -DINCLUDE_FEATURE_VOLUME -DINCLUDE_FEATURE_DISPLAY -DINCLUDE_FEATURE_UPLOAD
+#DEFINES        += -DINCLUDE_FEATURE_VOLUME -DINCLUDE_FEATURE_DISPLAY
+
+CFLAGS          += $(INCLUDE_DIR) $(DEFINES) $(GLOBAL_CONF)
+CXXFLAGS        += $(CPPINCLUDE_DIR) $(GLOBAL_CONF)
+
+#
+# Compose object file path
+#
+OBJPATH_RELEASE_STATIC          = $(TO_BASE)/build/Linux/release
+OBJPATH_DEBUG_STATIC            = $(TO_BASE)/build/Linux/debug
+
+######################################################
+# Compile config release or debug
+######################################################
+ifeq ($(TARGET_CFG),release)
+DEP_DIR                      = $(OBJPATH_RELEASE_STATIC)/dep
+LIB_DIR                      = $(OBJPATH_RELEASE_STATIC)/lib
+OBJS_DIR                     = $(OBJPATH_RELEASE_STATIC)/obj
+LD_LIB_DIR                   = release
+GLOBAL_CONF                  += -DNDEBUG -O2 -DUNIT_TEST
+#EXEC_NAME       = $(OUT_DIR)/LINUX/mkit
+endif
+
+ifeq ($(TARGET_CFG),debug)
+DEP_DIR                     = $(OBJPATH_DEBUG_STATIC)/dep
+LIB_DIR                     = $(OBJPATH_DEBUG_STATIC)/lib
+OBJS_DIR                    = $(OBJPATH_DEBUG_STATIC)/obj
+LD_LIB_DIR                  = debug
+GLOBAL_CONF                 += -D_DEBUG -DUNIT_TEST -DDEBUG
+#EXEC_NAME       = mkit
+endif

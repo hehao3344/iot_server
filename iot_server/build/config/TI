@@ -1,0 +1,38 @@
+# Global definition
+
+# Compile tools
+CROSS_COMPILE	?= $(CSTOOL_PREFIX)
+LD              = $(CROSS_COMPILE)ld
+CC              = $(CROSS_COMPILE)gcc
+CXX             = $(CROSS_COMPILE)g++
+AR              = $(CROSS_COMPILE)ar
+RANLIB          = $(CROSS_COMPILE)ranlib
+NM              = $(CROSS_COMPILE)nm
+STRIP           = $(CROSS_COMPILE)strip
+OBJCOPY         = $(CROSS_COMPILE)objcopy
+OBJDUMP         = $(CROSS_COMPILE)objdump
+
+# Shell script
+MKDIR           = mkdir -p
+SED             = sed
+CAT             = cat
+ECHO            = echo
+RM              = rm -rf
+SET             = set -e
+CP              = cp -rf
+GREP            = grep
+DATE            = date
+
+DEFINES         +=
+
+# For MATH lib
+MATH_FLAGS      =
+
+CFLAGS          += $(DEFINES) $(MATH_FLAGS) -Wall -DWEBS -DUEMF -DLINUX -D_BSD_SOURCE
+CXXFLAGS        += $(DEFINES) $(MATH_FLAGS) -Wall -DWEBS -DUEMF -DLINUX -D_BSD_SOURCE
+
+#CFLAGS          += $(DEFINES) $(MATH_FLAGS) -Wall -DWEBS -DUEMF -DLINUX -D_BSD_SOURCE -mstack-check-l1
+#CXXFLAGS        += $(DEFINES) $(MATH_FLAGS) -Wall -DWEBS -DUEMF -DLINUX -D_BSD_SOURCE -mstack-check-l1
+
+#LDFLAGS         += -lpthread -lm -L$(LIB_DIR) -Wl,-elf2flt
+LDFLAGS         += -lpthread -lm -L$(LIB_DIR) -lstdc++

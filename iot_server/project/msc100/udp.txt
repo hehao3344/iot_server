@@ -1,0 +1,51 @@
+step 1: local network scan [device search], if failed, jump to step 2.
+setp 2: proxy.
+
+
+    device                          server                       client
+      |                                |                            |
+      |        every 30 secs           |                            |
+      |       ------>register          |                            |
+      |     id:%s in json_msg          |                            |
+      |                                |                            |
+      | <------register success/failed |                            |
+      |                                |                            |
+      |                                |                            |
+      |       every 10 secs            |                            |
+      |    ----->keep alive id:%s      |                            |
+      |      in json_msg format        |                            |
+      |                                |                            |
+      |                                |                            |
+      |                                |             local network scan. if failed | if success.
+      |                                |                                    /            \
+      |                                |                                   /              \
+      |                                |                                  /                \
+      |                                |                                 /                  \
+      |                                |                                /                    \
+      |                                |                               /                      \
+      |                                |                              /                        \
+      |                                |                             /                          \
+      |                                |                            |                       client                              device
+      |                                |     <---- MSG_MSC_PROXY    |                           |                                |
+      |                                |  [id:%s + msg] in json_msg |                           |                                |
+      |                                |                            |                           |                                |
+      |          MSG_MSC_PROXY         |                            |                           |          MSG_MSC_COMMU         |
+      |         <------ proxy          |                            |                           |         ------------->         |
+      |    in json_msg format          |                            |                           |    in json_msg format          |
+      |                                |                            |                           |                                |
+      |            proxy               |                            |                           |          MSG_MSC_COMMU         |
+      |         ----------->           |                            |                           |         <-----------           |
+      |          MSG_MSC_PROXY         |                            |                           |         in json_msg format     |                            |                           |              |
+      |                                |         MSG_MSC_PROXY      |                           |                                |
+      |                                |       proxy ----------->   |                           |                                |
+      |                                |          in json_msg       |                           |                                |
+      |                               done                          |                           |                                |
+      |                                |                            |                           |                                |
+      |                                |                            |                           |                                |
+      |                                |                            |                           |                                |
+
+
+
+
+
+
