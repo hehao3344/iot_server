@@ -26,27 +26,27 @@ static long crypt_table[] =
     0xB85C9,0x9D162,0x7AEB6,0xBED34,0xB4963,0xE367B,0x4C891,0x9E42C,0xD4304,0x96EAA,0xD5D69,0x866B8,0x83508,0x7BAEC,0xD03FD,0xDA122
 };
 
-#define H_TYPE    (0x9A)
+#define H_TYPE  (0x9A)
 
-unsigned int string_to_hash ( void* pstring )
+unsigned int string_to_hash (void* pstring)
 {
-	unsigned int nSeed1, nSeed2;
+	unsigned int seed1, seed2;
 
 	char* pKey = (char*)pstring;
 	char  ch;
 
 	// LOL, coder joke: Dead Code ;)
-	nSeed1 = 0xDEADC0DE;
-	nSeed2 = 0x7FED7FED;
+	seed1 = 0xDEADC0DE;
+	seed2 = 0x7FED7FED;
 
 	while ( *pKey != 0 )
 	{
 		ch = toupper( *pKey++ );
 		// if you changed the size of the crypt_table, you must change the & 0xFF below
 		// to & whatever if it's a power of two, or % whatever, if it's not
-		nSeed1 = crypt_table[ ( ( H_TYPE << 8 ) + ch ) & 0xFF ] ^ (nSeed1 + nSeed2);
-		nSeed2 = ch + nSeed1 + nSeed2 + (nSeed2 << 5) + 3;
+		seed1 = crypt_table[ ( ( H_TYPE << 8 ) + ch ) & 0xFF ] ^ (seed1 + seed2);
+		seed2 = ch + seed1 + seed2 + (seed2 << 5) + 3;
 	}
 
-	return nSeed1;
+	return seed1;
 }

@@ -11,6 +11,7 @@ struct ini_t
     char *end;
 };
 
+static int ini_file_is_valid(const char *filename);
 
 /* Case insensitive string compare */
 static int strcmpci(const char *a, const char *b)
@@ -56,7 +57,7 @@ static char* discard_line(ini_t *ini, char *p)
     return p;
 }
 
-static char *unescape_quoted_value(ini_t *ini, char *p)
+static char * unescape_quoted_value(ini_t *ini, char *p)
 {
     /* Use `q` as write-head and `p` as read-head, `p` is always ahead of `q`
     * as escape sequences are always larger than their resultant data */
@@ -175,8 +176,78 @@ static void split_data(ini_t *ini)
     }
 }
 
+static int ini_file_is_valid(const char *filename)
+{
+    /* Open file */
+    int ret = -1;
+    FILE * fp = fopen(filename, "rb");
+    if (!fp)
+    {
+        printf("fopen file %s failed \n", filename);
+        return -1;
+    }
 
-ini_t* ini_load(const char *filename)
+    /* Get file size */
+    fseek(fp, 0, SEEK_END);
+    int sz = ftell(fp);
+    rewind(fp);
+    if (sz < 2)
+    {
+        fclose(fp);
+        printf("fopen size %d invalid \n", sz);
+        return -1;
+    }
+
+    char * data = malloc(sz + 1);
+    if (NULL == data)
+    {
+        fclose(fp);
+        printf("malloc failed \n");
+        return -1;
+    }
+
+    int n = fread(data, 1, sz, fp);
+    if (n != sz)
+    {
+        printf("error fread %d \n", sz);
+        free(data);
+        fclose(fp);
+        return -1;
+    }
+
+    int i;
+    int left_count = 0;
+    int right_count = 0;
+    int euqal_count = 0;
+
+    for (i=0; i<n; i++)
+    {
+        if ('[' == data[i])
+        {
+            left_count ++;
+        }
+        if (']' == data[i])
+        {
+            right_count ++;
+        }
+        if ('=' == data[i])
+        {
+            euqal_count++;
+        }
+    }
+
+    if ((left_count == right_count) && (right_count > 0) && (euqal_count > 0))
+    {
+        ret = 0;
+    }
+
+    free(data);
+    fclose(fp);
+
+    return ret;
+}
+
+ini_t * ini_load(const char *filename)
 {
     ini_t *ini = NULL;
     FILE *fp = NULL;
@@ -189,8 +260,13 @@ ini_t* ini_load(const char *filename)
         goto fail;
     }
 
-    memset(ini, 0, sizeof(*ini));
+    if (0 != ini_file_is_valid(filename))
+    {
+        printf("ini file %s invalid \n", filename);
+        goto fail;
+    }
 
+    memset(ini, 0, sizeof(*ini));
     /* Open file */
     fp = fopen(filename, "rb");
     if (!fp)
@@ -205,11 +281,17 @@ ini_t* ini_load(const char *filename)
 
     /* Load file content into memory, null terminate, init end var */
     ini->data = malloc(sz + 1);
+    if (NULL == ini->data)
+    {
+        goto fail;
+    }
     ini->data[sz] = '\0';
     ini->end = ini->data  + sz;
+
     n = fread(ini->data, 1, sz, fp);
     if (n != sz)
     {
+        printf("error fread %d \n", sz);
         goto fail;
     }
 
@@ -294,3 +376,4 @@ int ini_sget(ini_t *ini, const char *section, const char *key, const char *scanf
 
     return 1;
 }
+

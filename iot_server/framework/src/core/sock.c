@@ -279,7 +279,6 @@ int sock_get_link(char * dev)
 /* value 0: set net link to down value 1: set net link to up */
 int sock_set_link(char * dev, int value)
 {
-    int ret;
     struct ifreq ifr;
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd <= 0)

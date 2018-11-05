@@ -64,7 +64,7 @@ int udp_bind(int sock_fd, unsigned short port)
     svr_addr.sin_port = htons(port);
     if (SOCKET_ERROR != bind(sock_fd, (struct sockaddr*)&svr_addr, sizeof(struct sockaddr)))
     {
-        debug_print("Bind port %d ok \n", port);
+        debug_print("bind port %d ok \n", port);
         ret = 0;
     }
 #else
@@ -134,7 +134,7 @@ int udp_recvfrom(int sock_fd, char* ip, unsigned short *port, char *buffer, int 
 
 int udp_recvfrom_timeout(int sock_fd, char* ip, unsigned short *port, char *buffer, int len, int msec)
 {
-    int ret, sret, retval;
+    int ret = -1, sret, retval;
     int max_fd;
     fd_set readfds;
     struct timeval tv;
@@ -201,7 +201,7 @@ int udp_recvfrom2(int sock_fd, char *ip, unsigned short port, char *buffer, int 
     sock_addr.sin_addr.s_addr    = inet_addr(ip);
     sock_addr.sin_port           = htons(port);
 #endif
-    int sret, ret;
+    int sret, ret = -1;
     socklen_t sock_len = sizeof(struct sockaddr_in);
 
     sret = recvfrom(sock_fd, buffer, len, 0, (struct sockaddr *)&sock_addr, &sock_len);
@@ -233,7 +233,7 @@ int udp_recvfrom2_timeout(int sock_fd, char *ip, unsigned short port,
     sock_addr.sin_port           = htons(port);
 #endif
 
-    int ret, sret, retval;
+    int ret = -1, sret, retval;
     int max_fd;
     fd_set readfds;
     struct timeval tv;
@@ -391,6 +391,7 @@ int tcp_open_and_bind(unsigned short port)
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd <= 0)
     {
+        debug_print("socket failed \n");
         return -1;
     }
 #ifdef WIN32
@@ -438,6 +439,7 @@ int tcp_accept(int sock_fd, char *peer_ip, unsigned short *peer_port)
 	len = sizeof(struct sockaddr_in);
 	if ((new_fd = accept(sock_fd, (struct sockaddr *) &addr, (socklen_t *) &len)) < 0)
     {
+        debug_error("socket accept failed \n");
 		return -1;
 	}
 
@@ -460,7 +462,7 @@ int tcp_connect(int sock_fd, char* ip, unsigned short port)
     debug_print("connectting server: %s:%d \n", ip, port);
     if (-1 != connect(sock_fd, (struct sockaddr *)&svr_addr, sizeof(struct sockaddr)))
     {
-        debug_print("connect To Server: %s ok \n", ip);
+        debug_print("connect to server: %s ok \n", ip);
         ret = 0;
     }
 
@@ -498,7 +500,7 @@ int tcp_connect_timeout(int fd, char* ip, unsigned short port, uint msec)
     FD_ZERO(&w_set);
     FD_SET(fd, &w_set);
 
-    if(select(fd + 1, NULL, &w_set, NULL, &tm) <= 0)
+    if (select(fd + 1, NULL, &w_set, NULL, &tm) <= 0)
     {
         //debug_print("Network failed in connect\n");
     }
@@ -510,7 +512,7 @@ int tcp_connect_timeout(int fd, char* ip, unsigned short port, uint msec)
             flags = 0;
             if (0 != ioctlsocket(fd, FIONBIO, (uint*)&flags))
             {
-                debug_print(" ioctlsocket error \n");
+                debug_print("ioctlsocket error \n");
                 return 0;
             }
 #else
@@ -532,7 +534,7 @@ int tcp_open_connect(char* ip, unsigned short port)
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd <= 0)
 	{
-	    debug_print("open error \n");
+	    debug_error("open error \n");
 	    return -1;
 	}
 
@@ -542,7 +544,7 @@ int tcp_open_connect(char* ip, unsigned short port)
 
     if (-1 == connect(fd, (struct sockaddr *)&svr_addr, sizeof(struct sockaddr)))
     {
-        debug_print("TCP Connect %s failed \n", ip);
+        debug_print("tcp connect %s failed \n", ip);
         tcp_close(fd);
         return -1;
     }
@@ -588,7 +590,7 @@ int tcp_open_connect_timeout(char* ip, unsigned short port, unsigned int msec)
     FD_ZERO(&w_set);
     FD_SET(fd, &w_set);
 
-    if(select(fd + 1, NULL, &w_set, NULL, &tm) <= 0)
+    if (select(fd + 1, NULL, &w_set, NULL, &tm) <= 0)
     {
         debug_print("network error in connect\n");
         tcp_close(fd);
@@ -770,7 +772,7 @@ void tcp_close(int sock_fd)
         close(sock_fd);
 #endif
     }
-    sock_init();
+    sock_exit();
 }
 
 void get_sock_addr_by_ip_port(struct sockaddr_in *psAddr, char *ip, unsigned short port)
@@ -788,7 +790,7 @@ void get_sock_addr_by_ip_port(struct sockaddr_in *psAddr, char *ip, unsigned sho
 
 int get_local_ip(char *ip)
 {
-    uint ipLocal = 0;
+    uint ip_local = 0;
 #ifdef WIN32
     char host[128];
     struct in_addr addr;
@@ -798,14 +800,14 @@ int get_local_ip(char *ip)
     memset(host, 0, sizeof(host));
     if (gethostname(host, sizeof(host)) < 0)
     {
-        debug_print("Can't get hostname");
-        return FALSE;
+        debug_print("can't get hostname");
+        return -1;
     }
     psHost = gethostbyname(host);
     if (NULL == psHost)
     {
         debug_print("gethostbyname error\n");
-        return FALSE;
+        return -1;
     }
 
     memcpy(&addr, (char *)psHost->h_addr_list[0], sizeof(struct in_addr));
@@ -813,40 +815,40 @@ int get_local_ip(char *ip)
 
     strcpy(ip, tmp);
     // memcpy((char *)ip, (char *) psHost->h_addr_list[0], psHost->h_length);
-    // memcpy((char *)&ipLocal, (char *) psHost->h_addr_list[0], sizeof(uint));
+    // memcpy((char *)&ip_local, (char *) psHost->h_addr_list[0], sizeof(uint));
 #else
     int  fd;
-	struct sockaddr_in *psSAddr;
+	struct sockaddr_in *ps_addr;
 	struct ifreq ifr;
     fd = socket(AF_INET, SOCK_DGRAM,  0);
     if (-1 == fd)
     {
         debug_print("socket failed \n");
-        return FALSE;
+        return -1;
     }
 
     strncpy(ifr.ifr_name, "eth0", IFNAMSIZ);
 	if (ioctl(fd, SIOCGIFADDR, &ifr) < 0)
     {
         debug_print("ioctl failed \n");
-        return FALSE;
+        return -1;
     }
 
-    psSAddr = (struct sockaddr_in*)&ifr.ifr_addr;
+    ps_addr = (struct sockaddr_in*)&ifr.ifr_addr;
 
-    // memcpy(ip, &psSAddr->sin_addr, sizeof(uint));
-    memcpy((char *)&ipLocal, &psSAddr->sin_addr, sizeof(uint));
+    // memcpy(ip, &ps_addr->sin_addr, sizeof(uint));
+    memcpy((char *)&ip_local, &ps_addr->sin_addr, sizeof(uint));
 
     close(fd);
 #endif
 
-    return TRUE;
+    return 0;
 }
 
 int get_local_ip_by_name(char *ip, char *devName)
 {
 #ifdef WIN32
-    uint ipLocal = 0;
+    uint ip_local = 0;
     char host[128];
     struct in_addr addr;
     char *tmp = NULL;
@@ -877,14 +879,14 @@ int get_local_ip_by_name(char *ip, char *devName)
     if (-1 == fd)
     {
         debug_print("socket failed \n");
-        return FALSE;
+        return -1;
     }
 
     strncpy(ifr.ifr_name, devName, IFNAMSIZ);
 	if (ioctl(fd, SIOCGIFADDR, &ifr) < 0)
     {
         debug_print("ioctl failed = %s \n", devName);
-        return FALSE;
+        return -1;
     }
     saddr = (struct sockaddr_in*)&(ifr.ifr_addr);
     strcpy(ip, inet_ntoa(saddr->sin_addr));
@@ -894,23 +896,26 @@ int get_local_ip_by_name(char *ip, char *devName)
     close(fd);
 #endif
 
-    return TRUE;
+    return 0;
 }
 
 int get_local_bind_port(int sock_fd, unsigned short *port)
 {
-    int ret = 0;
+    int ret = -1;
     struct sockaddr_in sock_addr;
-    int iLen = sizeof(struct sockaddr);
-    if (0 == getsockname(sock_fd,  (struct sockaddr*)&sock_addr, (socklen_t *)&iLen))
+    int len = sizeof(struct sockaddr);
+    if (0 == getsockname(sock_fd,  (struct sockaddr*)&sock_addr, (socklen_t *)&len))
     {
         *port = ntohs(sock_addr.sin_port);
-        ret = 1;
+        ret = 0;
     }
 
     return ret;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// static function
+////////////////////////////////////////////////////////////////////////////////
 // ret > 0  ok.
 // ret = 0  sock error or peer closed.
 // ret = -1 would block.

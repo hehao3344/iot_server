@@ -210,8 +210,6 @@ int32 group_mgr_client_register( GROUP_MGR_HANDLE handle, int8 * sn,
 {
     int8 random_out[32];
     memset( random_out, 0, sizeof( random_out ) );
-
-
     if ( client_sn_registed_already( handle, sn ) )
     {
         debug_print("client registed already \n");

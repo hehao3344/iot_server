@@ -284,7 +284,7 @@ TTASK_HANDLE rthread_add(RTHREAD_HANDLE handle, const char * thread_name,
     task_handle = thread_pool_add_task(handle, 0, thread_name, fun, (void *)user_info);
     if (NULL != task_handle)
     {
-        control_info("start thread: %s success\n", thread_name);
+        debug_info("start thread: %s success\n", thread_name);
     }
     else
     {
@@ -326,7 +326,7 @@ TTASK_HANDLE rthread_tiny_add(RTHREAD_HANDLE handle, const char * thread_name,
     task_handle = thread_pool_add_task(handle, 1, thread_name, fun, (void *)user_info);
     if (NULL != task_handle)
     {
-        control_info("start thread: %s success\n", thread_name);
+        debug_print("start thread: %s success\n", thread_name);
     }
     else
     {
@@ -397,7 +397,7 @@ void rthread_wait_exit(RTHREAD_HANDLE handle, TTASK_HANDLE tt_handle)
         }
         if (0 == i%50)
         {
-            control_info("waitting for thread %s exit \n", tt_handle->thread_name);
+            debug_print("waitting for thread %s exit \n", tt_handle->thread_name);
         }
         usleep(50000);
     }
@@ -405,11 +405,11 @@ void rthread_wait_exit(RTHREAD_HANDLE handle, TTASK_HANDLE tt_handle)
     if (1 == tt_handle->is_exited)
     {
         tt_handle->exit_normal = 1;
-        control_info("thread %s exit done\n", tt_handle->thread_name);
+        debug_print("thread %s exit done\n", tt_handle->thread_name);
     }
     else
     {
-        control_info("warnning: %s exit unnormal\n", tt_handle->thread_name);
+        debug_print("warnning: %s exit unnormal\n", tt_handle->thread_name);
     }
 
 }
@@ -470,7 +470,7 @@ int rthread_is_destroyed(RTHREAD_HANDLE handle, TTASK_HANDLE tt_handle)
         if (handle->pr_count++ >= 500)
         {
             handle->pr_count = 0;
-            control_info("waiting for ... \n");
+            debug_print("waiting for ... \n");
         }
         return 0;
     }
@@ -649,7 +649,7 @@ static void * thread_pool_entrance(void *arg)
 
         tp_param->idle_thread_num--;
 
-        control_info("idle thread count: [%d] in [%s] thread pool\n",
+        debug_print("idle thread count: [%d] in [%s] thread pool\n",
                             tp_param->idle_thread_num,
                                 (tp_param->stack_size == THREAD_NORMAL_STACK_SIZE) ? "normal" : "tiny" );
 
@@ -669,9 +669,9 @@ static void * thread_pool_entrance(void *arg)
 
         if (NULL != work->task_fun)
         {
-            // control_info("thread [%s] enter \n", work->thread_name);
+            // debug_print("thread [%s] enter \n", work->thread_name);
             work->task_fun((long)work->arg);
-            control_info("thread %s exit \n", work->thread_name);
+            debug_print("thread %s exit \n", work->thread_name);
         }
 
         work->is_runing = 0;
