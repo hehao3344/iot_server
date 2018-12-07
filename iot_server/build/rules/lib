@@ -11,7 +11,8 @@ $(LIB_STATIC): $(foreach o,$(objects),$(COM_OBJPATH_STATIC)/$(o).o)
 	@$(ECHO) "Building $(TARGET_CFG) library >>> $(notdir $@) "
 	@$(MKDIR) $(@D)
 	@$(RM) $@
-	@$(AR) -cru $@ $^
+#	@$(AR) -cru $@ $^
+	@$(AR) -cr $@ $^
 	@$(RANLIB) $@
 
 ifneq ($(filter clean distclean rebuild, $(MAKECMDGOALS)),)
@@ -34,6 +35,3 @@ else
 include $(MKIT_BASE)/build/rules/compile
 sinclude $(addprefix $(DEP_DIR)/$(CUR_DIR)/,$(addsuffix .d,$(objects)))
 endif
-
-
-

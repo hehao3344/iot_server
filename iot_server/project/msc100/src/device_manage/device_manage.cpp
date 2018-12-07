@@ -3,28 +3,32 @@
 #include <ctype.h>
 
 #include "hash_table.h"
-#include "db/id_mgr.h"
+// #include "db/id_mgr.h"
 #include "device_manage.h"
 
-typedef struct Device
+#define TCP_TIMEOUT     180
+#define MAX_ID_ARRAY    4
+#define MAX_ID_LEN      16
+
+typedef struct _GW_DEVICE
 {
     struct list_head list;
+    char     id[MAX_ID_ARRAY][MAX_ID_LEN];
+    int      sock_fd;
+    unsigned int hash_value;
+    unsigned int next_sec;
+} GW_DEVICE;
 
-    int8   id[24];
-    uint32 hash_value;
-    int32  sock_fd;
-
-    uint32 next_sec;
-} Device;
-
-typedef struct DeviceMgrObject
+typedef struct _DEVICE_MGR_OBJECT
 {
-    struct  list_head head;  // Device head;
+    struct  list_head head;  // GW_DEVICE head;
     struct  hashtable *hclient;
+
+    pthread_mutex_t mutex;
+
     MUTEX_HANDLE      hmutex;
     ID_MGR_HANDLE     hid_mgr;
-
-} DeviceMgrObject;
+} DEVICE_MGR_OBJECT;
 
 static long g_lCryptTable[] =
 {
@@ -49,9 +53,10 @@ static long g_lCryptTable[] =
 /************************************************************************************************************************/
 /*			Internal Visiable Function Reference																		*/
 /************************************************************************************************************************/
-static unsigned int to_hash (void* pString);
-static int keys_equal_func ( void *pKey1, void *pKey2 );
-static Device *get_device_by_id( DEVICE_MGR_HANDLE handle, int8 *id );
+static unsigned int to_hash (void* pstring);
+static int keys_equal_func (void *pkey1, void *pkey2);
+static GW_DEVICE *get_device_by_id(DEVICE_MGR_HANDLE handle, char *id);
+
 /************************************************************************************************************************/
 /*			Internal Visiable Constant Definition																		*/
 /************************************************************************************************************************/
@@ -64,336 +69,336 @@ static Device *get_device_by_id( DEVICE_MGR_HANDLE handle, int8 *id );
 /************************************************************************************************************************/
 /*			Public Function Definition																					*/
 /************************************************************************************************************************/
-DEVICE_MGR_HANDLE device_mgr_create( int32 max_client_count )
+DEVICE_MGR_HANDLE device_mgr_create(int max_client_count)
 {
-    DeviceMgrObject *handle = ( DeviceMgrObject * )calloc( 1, sizeof( DeviceMgrObject ) );
-	if ( NULL == handle )
+    DEVICE_MGR_OBJECT *handle = (DEVICE_MGR_OBJECT *)calloc(1, sizeof(DEVICE_MGR_OBJECT));
+	if (NULL == handle)
     {
         debug_error("not enough memory \n");
         return NULL;
     }
+
+#if 0
     handle->hid_mgr = id_mgr_create();
-    if ( NULL == handle->hid_mgr )
+    if (NULL == handle->hid_mgr)
     {
         debug_error("id_mgr_create failed \n");
-        return NULL;
+        goto create_failed;
     }
+#endif
 
-    handle->hclient = create_hashtable( max_client_count, to_hash, keys_equal_func );
-    INIT_LIST_HEAD( &handle->head );
+    handle->hclient = create_hashtable(max_client_count, to_hash, keys_equal_func);
+    INIT_LIST_HEAD(&handle->head);
 
-    os_mutex_open( &handle->hmutex, NULL );
+    pthread_mutex_init(&handle->mutex, NULL);
 
     return handle;
+
+create_failed:
+    device_mgr_destroy(handle);
+    return NULL;
 }
 
-boolean device_mgr_get_proxy_server_addr( DEVICE_MGR_HANDLE handle, int8 *id,  int8 *ip )
+void device_mgr_get_proxy_server_addr(DEVICE_MGR_HANDLE handle, char *ip, int len)
 {
-    boolean ret = FALSE;
-    int32   position = id_mgr_get_id_position( handle->hid_mgr, id );
-
-    if ( ( position >= 0 ) && ( position < 10000 ) )
-    {
-        strcpy( ip, (int8 *)"120.24.210.85" );
-        //strcpy( ip, (int8 *)"192.168.1.15" );
-        ret = TRUE;
-    }
-    else
-    {
-        debug_error("not enough proxy server now ! \n");
-    }
-
-    return ret;
+    strncpy(ip, (char *)PROXY_SERVER_IP, len);
 }
 
-boolean device_mgr_add( DEVICE_MGR_HANDLE handle, int8 *id, int32 sock_fd, uint32 hash_value )
+int device_mgr_add(DEVICE_MGR_HANDLE handle, char *id, int sock_fd, unsigned int hash_value)
 {
-    if ( 20 != strlen( id ) )
+    if ((strlen(id) > MAX_ID_LEN) || (0 == strlen(id)))
     {
-        debug_print( "id invalid \n" );
-        return FALSE;
+        debug_print("id length %d invalid \n", strlen(id));
+        return -1;
     }
 
-    if ( !id_mgr_id_is_exist( handle->hid_mgr, id ) )
+#if 0
+    if (0 == id_mgr_id_is_exist(handle->hid_mgr, id))
     {
-        debug_print( "invalid id [%s][terminal register] \n", id );
-        return FALSE;
+        debug_print("invalid id [%s][terminal register] \n", id);
+        return -1;
     }
+#endif
 
-    Device *clt = get_device_by_id( handle, id );
-    if ( NULL == clt )
+    GW_DEVICE *gw_dev = get_device_by_id(handle, id);
+    if (NULL == gw_dev)
     {
-        Device* clt_tmp = NULL;
+        GW_DEVICE* gw_dev_tmp = NULL;
 
-	    clt_tmp = ( Device * )calloc( 1, sizeof( Device ) );
-        if ( NULL == clt_tmp )
+	    gw_dev_tmp = (GW_DEVICE *)calloc(1, sizeof(GW_DEVICE));
+        if (NULL == gw_dev_tmp)
         {
             debug_print("not enough memory \n");
-            os_mutex_unlock( &handle->hmutex );
-            return FALSE;
+            return -1;
         }
 
-        clt_tmp->sock_fd = sock_fd;
-        strcpy( clt_tmp->id, id );
-        clt_tmp->hash_value = hash_value;
-        clt_tmp->next_sec = get_real_time_sec() + 180; // 120 secs.
+        gw_dev_tmp->sock_fd = sock_fd;
+        strncpy(gw_dev_tmp->id, id, sizeof(gw_dev_tmp->id));
+        gw_dev_tmp->hash_value = hash_value;
+        gw_dev_tmp->next_sec   = get_real_time_sec() + TCP_TIMEOUT;
 
-        os_mutex_lock( &handle->hmutex );
-        if ( !hashtable_insert( handle->hclient, clt_tmp->id, clt_tmp ) )
+        pthread_mutex_lock(&handle->mutex);
+        if (!hashtable_insert(handle->hclient, gw_dev_tmp->id, gw_dev_tmp))
         {
             debug_print(" hashtable_insert failed \n");
-	    free( clt_tmp );
-	    os_mutex_unlock( &handle->hmutex );
-	    return FALSE;
+	        free(gw_dev_tmp);
+	        pthread_mutex_unlock(&handle->mutex);
+	        return -1;
         }
-        list_add_tail( &clt_tmp->list, &handle->head );
-        os_mutex_unlock( &handle->hmutex );
-
+        list_add_tail(&gw_dev_tmp->list, &handle->head);
+        pthread_mutex_unlock(&handle->mutex);
     }
     else
     {
-        if ( clt->hash_value != hash_value )
+        /* 如果hash值不一样则更新 */
+        if (gw_dev->hash_value != hash_value)
         {
-            debug_print("re-register id %s \n", id );
-            os_mutex_lock( &handle->hmutex );
-            list_del( &clt->list );
-            hashtable_remove( handle->hclient, clt->id );
-            free( clt );
-            os_mutex_unlock( &handle->hmutex );
+            debug_print("re-register id %s \n", id);
+            pthread_mutex_lock(&handle->hmutex);
+            list_del(&gw_dev->list);
+            hashtable_remove(handle->hclient, gw_dev->id);
+            free(gw_dev);
+            pthread_mutex_unlock(&handle->hmutex);
 
-            Device* clt_tmp = NULL;
-    	    clt_tmp = ( Device * )calloc( 1, sizeof( Device ) );
-            if ( NULL == clt_tmp )
+            GW_DEVICE * gw_dev_tmp = NULL;
+    	    gw_dev_tmp = (GW_DEVICE *)calloc(1, sizeof(GW_DEVICE));
+            if (NULL == gw_dev_tmp)
             {
                 debug_print("not enough memory \n");
-                os_mutex_unlock( &handle->hmutex );
-                return FALSE;
+                pthread_mutex_unlock(&handle->hmutex);
+                return -1;
             }
 
-            clt_tmp->sock_fd = sock_fd;
-            strcpy( clt_tmp->id, id );
-            clt_tmp->hash_value = hash_value;
-            clt_tmp->next_sec = get_real_time_sec() + 180; // 120 secs.
+            gw_dev_tmp->sock_fd = sock_fd;
+            strcpy(gw_dev_tmp->id, id);
+            gw_dev_tmp->hash_value = hash_value;
+            gw_dev_tmp->next_sec = get_real_time_sec() + TCP_TIMEOUT; // 120 secs.
 
-            os_mutex_lock( &handle->hmutex );
-    	    if ( !hashtable_insert( handle->hclient, clt_tmp->id, clt_tmp ) )
+            pthread_mutex_lock(&handle->hmutex);
+    	    if (!hashtable_insert(handle->hclient, gw_dev_tmp->id, gw_dev_tmp))
     	    {
-    	        debug_print(" hashtable_insert failed \n");
-                free( clt_tmp );
-                os_mutex_unlock( &handle->hmutex );
-
-                return FALSE;
+    	        debug_print("hashtable_insert failed \n");
+                free(gw_dev_tmp);
+                pthread_mutex_unlock(&handle->hmutex);
+                return -1;
     	    }
-            list_add_tail( &clt_tmp->list, &handle->head );
-            os_mutex_unlock( &handle->hmutex );
+            list_add_tail(&gw_dev_tmp->list, &handle->head);
+            pthread_mutex_unlock(&handle->hmutex);
         }
     }
 
-    return TRUE;
+    return 0;
 }
 
-boolean device_mgr_id_is_valid( DEVICE_MGR_HANDLE handle, int8 *id )
+int device_mgr_id_is_valid(DEVICE_MGR_HANDLE handle, char *id)
 {
-    boolean ret = FALSE;
-    if ( !id_mgr_id_is_exist( handle->hid_mgr, id ) )
+    int ret = -1;
+
+#if 0
+    if (!id_mgr_id_is_exist(handle->hid_mgr, id))
     {
-        debug_print( "invalid id [%s][client visit] \n", id );
+        debug_print("invalid id [%s][client visit] \n", id);
         return FALSE;
     }
-    Device *clt = get_device_by_id( handle, id );
-    if ( NULL != clt )
+#endif
+
+    GW_DEVICE *gw_dev = get_device_by_id(handle, id);
+    if (NULL != gw_dev)
     {
-        ret = TRUE;
+        ret = 0;
     }
 
     return ret;
 }
 
-void device_mgr_keep_alive( DEVICE_MGR_HANDLE handle, int8 *id )
+void device_mgr_keep_alive(DEVICE_MGR_HANDLE handle, char *id)
 {
-    Device *clt = get_device_by_id( handle, id );
-    if ( NULL != clt )
+    GW_DEVICE *gw_dev = get_device_by_id(handle, id);
+    if (NULL != gw_dev)
     {
-        clt->next_sec = get_real_time_sec() + 180; // time out is 120 sec.
+        gw_dev->next_sec = get_real_time_sec() + TCP_TIMEOUT;
     }
 }
 
-void device_mgr_flush( DEVICE_MGR_HANDLE handle )
+void device_mgr_flush(DEVICE_MGR_HANDLE handle)
 {
-    Device* clt_list = NULL;
+    GW_DEVICE* gw_dev_list = NULL;
     struct list_head *pos = NULL;
     struct list_head *n   = NULL;
 
-    list_for_each_safe( pos, n, &handle->head )
+    list_for_each_safe(pos, n, &handle->head)
     {
-        clt_list = list_entry( pos, Device, list );
-        if ( NULL != clt_list )
+        gw_dev_list = list_entry(pos, GW_DEVICE, list);
+        if (NULL != gw_dev_list)
         {
-            if ( get_real_time_sec() >= (int32)clt_list->next_sec )
+            if (get_real_time_sec() >= (int)gw_dev_list->next_sec)
             {
-               debug_print("id %s exit \n", clt_list->id );
-               os_mutex_lock( &handle->hmutex );
-               list_del( &clt_list->list );
-               hashtable_remove( handle->hclient, clt_list->id );
-               free( clt_list );
-               os_mutex_unlock( &handle->hmutex );
+               debug_print("id %s exit \n", gw_dev_list->id);
+               pthread_mutex_lock(&handle->hmutex);
+               list_del(&gw_dev_list->list);
+               hashtable_remove(handle->hclient, gw_dev_list->id);
+               free(gw_dev_list);
+               pthread_mutex_unlock(&handle->hmutex);
             }
             else
             {
-               os_mutex_lock( &handle->hmutex );
-               clt_list->next_sec = get_real_time_sec() + 120;
-               os_mutex_unlock( &handle->hmutex );
+               pthread_mutex_lock(&handle->hmutex);
+               gw_dev_list->next_sec = get_real_time_sec() + TCP_TIMEOUT;
+               pthread_mutex_unlock(&handle->hmutex);
             }
         }
     }
 }
 
-boolean device_mgr_remove( DEVICE_MGR_HANDLE handle, int8 *id )
+int device_mgr_remove(DEVICE_MGR_HANDLE handle, char *id)
 {
-    boolean ret = FALSE;
+    int ret = -1;
     struct list_head   *pos = NULL;
     struct list_head   *n   = NULL;
-    Device* clt_list = NULL;
-    Device* clt_tmp = NULL;
-	clt_tmp = ( Device* ) hashtable_search( handle->hclient, id );
-	if ( NULL == clt_tmp )
+    GW_DEVICE* gw_dev_list = NULL;
+    GW_DEVICE* gw_dev_tmp = NULL;
+	gw_dev_tmp = (GW_DEVICE * )hashtable_search(handle->hclient, id);
+	if (NULL == gw_dev_tmp)
 	{
-		return FALSE;
+		return -1;
 	}
 
-    list_for_each_safe( pos, n, &handle->head )
+    list_for_each_safe(pos, n, &handle->head)
     {
-        clt_list = list_entry( pos, Device, list );
-        if ( NULL != clt_list )
+        gw_dev_list = list_entry(pos, GW_DEVICE, list);
+        if (NULL != gw_dev_list)
         {
-            if ( 0 == strcmp( id, clt_list->id )  )
+            if (0 == strcmp(id, gw_dev_list->id) )
             {
-                os_mutex_lock( &handle->hmutex );
-                list_del( &clt_list->list );
-                free( clt_list );
-                os_mutex_unlock( &handle->hmutex );
+                pthread_mutex_lock(&handle->hmutex);
+                list_del(&gw_dev_list->list);
+                free(gw_dev_list);
+                pthread_mutex_unlock(&handle->hmutex);
                 break;
             }
         }
     }
 
-	if ( 0 == hashtable_remove( handle->hclient, id ) )
+	if (0 == hashtable_remove(handle->hclient, id))
 	{
-		ret = TRUE;
+		ret = 0;
 	}
 
 	return ret;
 }
 
 
-int32 device_mgr_get_count( DEVICE_MGR_HANDLE handle )
+int device_mgr_get_count(DEVICE_MGR_HANDLE handle)
 {
-	return (int32)hashtable_count( handle->hclient );
+	return (int)hashtable_count(handle->hclient);
 }
 
-boolean device_mgr_get_sock_fd( DEVICE_MGR_HANDLE handle, int8 *id, int32 *sock_fd )
+int device_mgr_get_sock_fd(DEVICE_MGR_HANDLE handle, char *id, int *sock_fd)
 {
     boolean ret = FALSE;
-    Device *client = ( Device * )hashtable_search( handle->hclient, id );
-    if ( NULL != client )
+    GW_DEVICE *client = (GW_DEVICE *)hashtable_search(handle->hclient, id);
+    if (NULL != client)
     {
         *sock_fd = client->sock_fd;
-        ret = TRUE;
+        ret = 0;
     }
 
 	return ret;
 }
 
-void device_mgr_dump( DEVICE_MGR_HANDLE handle )
+void device_mgr_dump(DEVICE_MGR_HANDLE handle)
 {
-    int32 count;
-    int8  buffer[64];
-    int8  commom_time[32];
-    int8  ymd_buf[16];
-    int8  filename[32];
+    int count;
+    char  buffer[64];
+    char  commom_time[32];
+    char  ymd_buf[16];
+    char  filename[32];
 
-    count = ( int32 )hashtable_count( handle->hclient );
+    count = (int)hashtable_count(handle->hclient);
 
     debug_print("device info: \n");
-    debug_print("total [%d] device registered \n", count );
+    debug_print("total [%d] device registered \n", count);
 
-    memset( filename, 0, sizeof( filename ) );
-    memset( ymd_buf, 0, sizeof( ymd_buf ) );
-    get_time_ymd( ymd_buf );
-    sprintf( filename, "%s.log", ymd_buf );
+    memset(filename, 0, sizeof(filename));
+    memset(ymd_buf, 0, sizeof(ymd_buf));
+    get_time_ymd(ymd_buf);
+    sprintf(filename, "%s.log", ymd_buf);
 
-    FILE *fp = fopen( filename, "a+" );
-    memset( buffer, 0, sizeof( buffer ) );
-    memset( commom_time, 0, sizeof( commom_time ) );
-    get_common_time( commom_time );
-    sprintf( buffer, "%s - count:[%d]\r\n", commom_time, count  );
+    FILE *fp = fopen(filename, "a+");
+    memset(buffer, 0, sizeof(buffer));
+    memset(commom_time, 0, sizeof(commom_time));
+    get_common_time(commom_time);
+    sprintf(buffer, "%s - count:[%d]\r\n", commom_time, count );
 
-    if ( NULL != fp )
+    if (NULL != fp)
     {
-        fwrite( buffer, 1, strlen( buffer ), fp );
-        fclose( fp );
+        fwrite(buffer, 1, strlen(buffer), fp);
+        fclose(fp);
     }
 }
 
-void device_mgr_destroy( DEVICE_MGR_HANDLE handle )
+void device_mgr_destroy(DEVICE_MGR_HANDLE handle)
 {
-    Device* clt_list = NULL;
+    GW_DEVICE* gw_dev_list = NULL;
     struct list_head *pos = NULL;
     struct list_head *n   = NULL;
-
-    list_for_each_safe( pos, n, &handle->head )
+    if (NULL == handle)
     {
-        clt_list = list_entry( pos, Device, list );
-        if ( NULL != clt_list )
+        return;
+    }
+    list_for_each_safe(pos, n, &handle->head)
+    {
+        gw_dev_list = list_entry(pos, GW_DEVICE, list);
+        if (NULL != gw_dev_list)
         {
-            list_del( &clt_list->list );
-            free( clt_list );
+            list_del(&gw_dev_list->list);
+            free(gw_dev_list);
         }
     }
-    list_del( &handle->head );
-    id_mgr_destroy( handle->hid_mgr );
-    hashtable_destroy( handle->hclient, 0 );
-    os_mutex_close( &handle->hmutex );
-    free( handle );
+    list_del(&handle->head);
+    id_mgr_destroy(handle->hid_mgr);
+    hashtable_destroy(handle->hclient, 0);
+    os_mutex_close(&handle->hmutex);
+    free(handle);
 }
 
-/************************************************************************************************************************/
-/*			Private Function Definition																					*/
-/************************************************************************************************************************/
-static Device *get_device_by_id( DEVICE_MGR_HANDLE handle, int8 *id )
+/*******************************************************************************/
+/*			Private Function Definition										   */
+/*******************************************************************************/
+static GW_DEVICE *get_device_by_id(DEVICE_MGR_HANDLE handle, char *id)
 {
-	return ( Device* ) hashtable_search( handle->hclient, id );
+	return (GW_DEVICE*) hashtable_search(handle->hclient, id);
 }
 
-static unsigned int to_hash ( void* pString )
+static unsigned int to_hash(void* pstring)
 {
-	unsigned int nSeed1, nSeed2;
+	unsigned int nseed1, nseed2;
 
-	char* pKey = (char*)pString;
+	char* pkey = (char*)pstring;
 	char  ch;
 
 	// LOL, coder joke: Dead Code ;)
-	nSeed1 = 0xDEADC0DE;
-	nSeed2 = 0x7FED7FED;
+	nseed1 = 0xDEADC0DE;
+	nseed2 = 0x7FED7FED;
 
-	while (*pKey != 0)
+	while (*pkey != 0)
 	{
-		ch = toupper (*pKey++);
+		ch = toupper (*pkey++);
 
 		// if you changed the size of the g_lCryptTable, you must change the & 0xFF below
 		// to & whatever if it's a power of two, or % whatever, if it's not
-		nSeed1 = g_lCryptTable[((TYPE << 8) + ch)&0xFF] ^ (nSeed1 + nSeed2);
-		nSeed2 = ch + nSeed1 + nSeed2 + (nSeed2 << 5) + 3;
+		nseed1 = g_lCryptTable[((TYPE << 8) + ch)&0xFF] ^ (nseed1 + nseed2);
+		nseed2 = ch + nseed1 + nseed2 + (nseed2 << 5) + 3;
 	}
 
-	return nSeed1;
+	return nseed1;
 }
 
-static int keys_equal_func ( void *pKey1, void *pKey2 )
+static int keys_equal_func(void *pkey1, void *pkey2)
 {
     return 1;
 #if 0
-	if ( strcmp((char*)pKey1, (char*)pKey2) == 0 )
+	if (strcmp((char*)pkey1, (char*)pkey2) == 0)
     {
 		return 1;
 	}

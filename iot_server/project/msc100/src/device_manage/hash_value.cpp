@@ -28,7 +28,7 @@ static long crypt_table[] =
 
 #define H_TYPE    (0x9A)
 
-unsigned int string_to_hash ( void* pstring )
+unsigned int string_to_hash(void* pstring)
 {
 	unsigned int nSeed1, nSeed2;
 

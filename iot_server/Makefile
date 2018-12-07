@@ -49,7 +49,7 @@ post_build: $(OBJS_DIR)/project/$(PROJECT_CFG)/src/main.o
 	@$(MKDIR) $(OUT_DIR)/linux
 	@$(CXX) -o $(EXEC_NAME) -lproject -lframework $(LDFLAGS)
 	@$(CROSS_COMPILE)strip $(EXEC_NAME)
-	@$(CP) $(EXEC_NAME)   /share/romfs/usr/bin/webs/linux/
+#	@$(CP) $(EXEC_NAME)   /share/romfs/usr/bin/webs/linux/
 
 # Clean commands
 clean:

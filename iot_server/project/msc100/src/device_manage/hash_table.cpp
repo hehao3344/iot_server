@@ -26,8 +26,7 @@ const unsigned int prime_table_length = sizeof(primes)/sizeof(primes[0]);
 const float max_load_factor = ( const float )0.65;
 
 /*****************************************************************************/
-struct hashtable *
-create_hashtable(unsigned int minsize,
+struct hashtable * create_hashtable(unsigned int minsize,
                  unsigned int (*hashf) (void*),
                  int (*eqf) (void*,void*))
 {
@@ -54,8 +53,7 @@ create_hashtable(unsigned int minsize,
 }
 
 /*****************************************************************************/
-unsigned int
-hash(struct hashtable *h, void *k)
+unsigned int hash(struct hashtable *h, void *k)
 {
     /* Aim to protect against poor hash functions by adding logic here
      * - logic taken from java 1.4 hashtable source */
@@ -68,8 +66,7 @@ hash(struct hashtable *h, void *k)
 }
 
 /*****************************************************************************/
-static int
-hashtable_expand(struct hashtable *h)
+static int hashtable_expand(struct hashtable *h)
 {
     /* Double the size of the table to accomodate more entries */
     struct entry **newtable;
@@ -127,15 +124,13 @@ hashtable_expand(struct hashtable *h)
 }
 
 /*****************************************************************************/
-unsigned int
-hashtable_count(struct hashtable *h)
+unsigned int hashtable_count(struct hashtable *h)
 {
     return h->entrycount;
 }
 
 /*****************************************************************************/
-int
-hashtable_insert(struct hashtable *h, void *k, void *v)
+int hashtable_insert(struct hashtable *h, void *k, void *v)
 {
     /* This method allows duplicate keys - but they shouldn't be used */
     unsigned int index;

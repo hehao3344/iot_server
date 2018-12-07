@@ -31,8 +31,6 @@ PROJECT_MSGH_DIR      = $(PROJECT_SRC_DIR)/msg_handle
 # Component source
 ####################################################################################
 COM_PROJECT_SRC =  \
-                $(PROJECT_MSGH_DIR)/msg_handle.cpp \
-                $(PROJECT_DEVMGR_DIR)/proxy_manage.cpp \
                 $(PROJECT_SRC_DIR)/main.cpp
 
 # Local include directory

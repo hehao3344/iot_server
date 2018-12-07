@@ -6,6 +6,16 @@ extern "C"
 {
 #endif
 
+
+
+
+
+
+
+
+
+
+
 #define CLIENT_A_DYNAMIC_PWD            0x01 // pwd is random.
 #define CLIENT_R_DYNAMIC_PWD            0x81
 

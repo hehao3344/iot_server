@@ -23,6 +23,7 @@ COM_OBJPATH_STATIC  = $(OBJS_DIR)/$(CUR_DIR)
 # Source code directory
 FRAMEWORK_SRC_DIR      = src
 FRAMEWORK_CORE_DIR     = $(FRAMEWORK_SRC_DIR)/core
+FRAMEWORK_DB_DIR       = $(FRAMEWORK_SRC_DIR)/db
 
 ####################################################################################
 # Component source
@@ -33,7 +34,9 @@ COM_FRAMEWORK_SRC =  \
                 $(FRAMEWORK_CORE_DIR)/rthread.c  \
                 $(FRAMEWORK_CORE_DIR)/sock.c     \
                 $(FRAMEWORK_CORE_DIR)/sock_core.c \
-                $(FRAMEWORK_CORE_DIR)/tcp_sock.c
+                $(FRAMEWORK_CORE_DIR)/tcp_sock.c \
+                $(FRAMEWORK_DB_DIR)/sqlite3.c \
+                $(FRAMEWORK_DB_DIR)/dev_db_mgr.c
 
 # Local include directory
 LOCAL_INC           += -Iinclude -I$(FRAMEWORK_SRC_DIR)  $(EXTERNAL_INC_FLAGS)
@@ -52,7 +55,8 @@ CXXFLAGS            += $(LOCAL_CPPINC)  $(LOCAL_DEFINE)
 
 SRCS                += $(COM_FRAMEWORK_SRC)
 
-objects             = $(patsubst %.S,%,$(patsubst %.cpp,%,$(patsubst %.c,%,$(SRCS))))
+#objects             = $(patsubst %.S,%,$(patsubst %.cpp,%,$(patsubst %.c,%,$(SRCS))))
+objects             = $(patsubst %.c,%,$(SRCS))
 
 target              = framework
 target_version      = 1.00
