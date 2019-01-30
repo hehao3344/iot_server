@@ -10,7 +10,7 @@
 #define filename(x) (strrchr(x,'/')?strrchr(x,'/')+1:x)
 
 #define debug_print(fmt, ...) \
-    do { if (IOT_DEBUG) fprintf(stderr, "debug,line:%d " fmt, __LINE__, ##__VA_ARGS__); } while (0)
+    do { if (IOT_DEBUG) fprintf(stderr, "debug,line:%s:%d " fmt, filename(__FILE__),__LINE__, ##__VA_ARGS__); } while (0)
 
 #define debug_info(fmt, ...) \
     do { if (IOT_DEBUG) printf("%s:%d:%s(): " fmt, filename(__FILE__), __LINE__, __func__, ##__VA_ARGS__); } while (0)

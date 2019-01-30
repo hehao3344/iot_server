@@ -29,7 +29,7 @@ int  tcp_open_set_reuse_and_bind(unsigned short port);
 int  tcp_open_and_bind(unsigned short port);
 int  tcp_listen(int sock_fd, int count);
 int  tcp_accept(int sock_fd, char *peerIP, unsigned short *peerPort);
-
+int  tcp_set_nonblock(int sock_fd);
 int  tcp_connect(int sock_fd, char* IP, unsigned short port);
 int  tcp_connect_timeout(int fd, char* IP, unsigned short port, uint msec);
 int  tcp_get_peer_addr(int sock_fd, char *ip, unsigned short *port);

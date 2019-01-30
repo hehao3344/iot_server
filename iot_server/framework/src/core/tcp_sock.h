@@ -17,7 +17,6 @@ TCP_SOCK_HANDLE tcp_sock_create(void);
 *  失败 返回 -1
 ************************/
 int  tcp_sock_open(TCP_SOCK_HANDLE handle);
-
 void tcp_sock_close(TCP_SOCK_HANDLE handle);
 void tcp_sock_set_nonblock(TCP_SOCK_HANDLE handle);
 int  tcp_sock_set_block(TCP_SOCK_HANDLE handle);

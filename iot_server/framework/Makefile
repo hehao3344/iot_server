@@ -24,6 +24,7 @@ COM_OBJPATH_STATIC  = $(OBJS_DIR)/$(CUR_DIR)
 FRAMEWORK_SRC_DIR      = src
 FRAMEWORK_CORE_DIR     = $(FRAMEWORK_SRC_DIR)/core
 FRAMEWORK_DB_DIR       = $(FRAMEWORK_SRC_DIR)/db
+FRAMEWORK_JSON_DIR     = $(FRAMEWORK_SRC_DIR)/json
 
 ####################################################################################
 # Component source
@@ -36,7 +37,11 @@ COM_FRAMEWORK_SRC =  \
                 $(FRAMEWORK_CORE_DIR)/sock_core.c \
                 $(FRAMEWORK_CORE_DIR)/tcp_sock.c \
                 $(FRAMEWORK_DB_DIR)/sqlite3.c \
-                $(FRAMEWORK_DB_DIR)/dev_db_mgr.c
+                $(FRAMEWORK_DB_DIR)/dev_db_mgr.c \
+                $(FRAMEWORK_JSON_DIR)/jsonparse.c \
+                $(FRAMEWORK_JSON_DIR)/cjson.c \
+                $(FRAMEWORK_JSON_DIR)/jsontree.c \
+                $(FRAMEWORK_DB_DIR)/id_mgr.c
 
 # Local include directory
 LOCAL_INC           += -Iinclude -I$(FRAMEWORK_SRC_DIR)  $(EXTERNAL_INC_FLAGS)

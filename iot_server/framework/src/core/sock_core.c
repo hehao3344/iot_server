@@ -414,9 +414,31 @@ int tcp_open_and_bind(unsigned short port)
     {
         debug_print("tcp Bind port %d ok \n", port);
     }
+    else
+    {
+        debug_print("tcp Bind port %d failed \n", port);
+        close(sock_fd);
+        sock_fd = 0;
+    }
 #endif
 
     return sock_fd;
+}
+
+int tcp_set_nonblock(int sock_fd)
+{
+    if (sock_fd < 0)
+    {
+        debug_error("invalid param \n");
+        return -1;
+    }
+
+    int flags;
+    flags = fcntl(sock_fd, F_GETFL, 0);
+    flags |= O_NONBLOCK;
+    fcntl(sock_fd, F_SETFL, flags);
+
+    return 0;
 }
 
 int tcp_listen(int sock_fd, int count)

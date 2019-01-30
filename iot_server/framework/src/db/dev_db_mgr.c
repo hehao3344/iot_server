@@ -308,6 +308,7 @@ int dev_db_mgr_unit_test(void)
         return -1;
     }
 
+#if 0
     DEV_PARAM dev_param;
     memset(&dev_param, 0, sizeof(DEV_PARAM));
     ret = dev_db_mgr_device_get_param(handle, dev_uuid,  &dev_param);
@@ -329,6 +330,7 @@ int dev_db_mgr_unit_test(void)
         return -1;
     }
     debug_print("get uuid %s on_off %d alive %d \n", dev_param.dev_uuid, dev_param.on_off, dev_param.last_alive);
+#endif
 
     dev_db_mgr_destroy(handle);
 

@@ -11,40 +11,32 @@
 
 #include "tcp_server.h"
 
-#define  MAX_MSG_LEN  1024
+#define MAX_MSG_LEN        1024
+#define MAX_EVENTS         256     /* 实际作用不大 */
 
-typedef struct TcpServerObject
+typedef struct _TCP_SERVER_OBJECT
 {
-    int32 device_sock_fd;
-    int32 client_sock_fd;
-    int32 distributed_sock_fd;
+    int device_sock_fd;
 
-    DEVICE_MGR_HANDLE hdev_mgr;
+    DEVICE_MGR_HANDLE         hdev_mgr;
     DISTRIBUTED_MANAGE_HANDLE hdistributed_mgr;
-    PROXY_MANAGE_HANDLE       hproxy_mgr;
 
-    THREAD_HANDLE hthread_distributed;
-    THREAD_HANDLE hthread_device_msg;
-    THREAD_HANDLE hthread_client_msg;
-    THREAD_HANDLE hthread_flush;
-    THREAD_HANDLE hthread_visit_flush;
-} TcpServerObject;
+    RTHREAD_HANDLE rthread_center;
+    TTASK_HANDLE   ttask_center;
 
-// port:
-// 8010 msg from device.
-// 8020 msg from client.
-// 8030 used for distributed.
+    int epoll_fd;
 
-static void * distributed_accept_center( void * arg );
-static void * device_accept_center( void * arg );
-static void * client_accept_center( void * arg );
-static void * flush_center( void * arg );
-static TcpServerObject * instance( void );
+} TCP_SERVER_OBJECT;
 
-TCP_SERVER_HANDLE tcp_server_create( void )
+static void * device_accept_center(void * arg);
+static void * flush_center(void * arg);
+static TCP_SERVER_OBJECT * instance(void);
+static void dev_thread_center(long user_info);
+
+TCP_SERVER_HANDLE tcp_server_create(void)
 {
-    TcpServerObject *handle = instance();
-    if ( NULL == handle )
+    TCP_SERVER_OBJECT *handle = instance();
+    if (NULL == handle)
     {
         debug_error("not enough memory \n");
         return NULL;
@@ -52,46 +44,31 @@ TCP_SERVER_HANDLE tcp_server_create( void )
 
     // create and bind 3 socket.
     // for device communication.
-    handle->device_sock_fd = tcp_open_and_bind( 8010 );
-    if ( handle->device_sock_fd <= 0 )
+    handle->device_sock_fd = tcp_open_and_bind(PORT_DEV);
+    if (handle->device_sock_fd <= 0)
     {
         debug_error("socket create failed \n");
         return NULL;
     }
-    if ( !tcp_listen( handle->device_sock_fd, 10 ) )
+
+    tcp_sock_set_nonblock(handle->device_sock_fd);
+    handle->epoll_fd  = epoll_create(MAX_EVENTS);
+    if (handle->epoll_fd < 0)
+    {
+        debug_error("epoll_create");
+        return NULL;
+    }
+
+#if 0
+    if (!tcp_listen(handle->device_sock_fd, 10))
     {
         debug_error("socket listen failed \n");
         return NULL;
     }
+#endif
 
-    // for client communication.
-    handle->client_sock_fd = tcp_open_and_bind( 8020 );
-    if ( handle->client_sock_fd <= 0 )
-    {
-        debug_error("socket create failed \n");
-        return NULL;
-    }
-    if ( !tcp_listen( handle->client_sock_fd, 10 ) )
-    {
-        debug_error("socket listen failed \n");
-        return NULL;
-    }
-
-    // for distributed communication.
-    handle->distributed_sock_fd = tcp_open_and_bind( 8030 );
-    if ( handle->distributed_sock_fd <= 0 )
-    {
-        debug_error("socket create failed \n");
-        return NULL;
-    }
-    if ( !tcp_listen( handle->distributed_sock_fd, 10 ) )
-    {
-        debug_error("socket create failed \n");
-        return NULL;
-    }
-
-    handle->hdev_mgr = device_mgr_create( MAX_CLIENTS );
-    if ( NULL == handle->hdev_mgr )
+    handle->hdev_mgr = device_mgr_create(MAX_CLIENTS);
+    if (NULL == handle->hdev_mgr)
     {
         debug_error("not enough memory \n");
         return NULL;
@@ -100,168 +77,230 @@ TCP_SERVER_HANDLE tcp_server_create( void )
     dis_mgr_env.hdev_mgr = handle->hdev_mgr;
 
     // create distributed and proxy.
-    handle->hdistributed_mgr = distributed_mgr_create( &dis_mgr_env );
-    if ( NULL == handle->hdistributed_mgr )
+    handle->hdistributed_mgr = distributed_mgr_create(&dis_mgr_env);
+    if (NULL == handle->hdistributed_mgr)
     {
         debug_error("not enough memory \n");
         return NULL;
     }
 
-    ProxyMgrEnv proxy_mgr_env;
-    proxy_mgr_env.hdev_mgr = handle->hdev_mgr;
-
-    handle->hproxy_mgr = proxy_mgr_create( &proxy_mgr_env );
-    if ( NULL == handle->hproxy_mgr )
+    handle->rthread_center = rthread_create();
+    if (NULL == handle->rthread_center)
     {
-        debug_error("not enough memory \n");
-        return NULL;
+        debug_error("rthread_create failed \n");
+        goto create_failed;
     }
 
-    // create 4 thread.
-    if ( 0 != os_create_thread( &handle->hthread_distributed,
-                                NULL,
-                                ( sp_thread_func_t )distributed_accept_center,
-                                ( void * )handle ) )
+    handle->ttask_center = rthread_add(handle->rthread_center,
+                                       "dev_center",
+                                       dev_thread_center,
+                                       (long)handle);
+    if (NULL == handle->ttask_center)
     {
-        debug_error( "pthread_create error \n");
-        return NULL;
+        debug_error("rthread_add failed \n");
+        goto create_failed;
     }
-
-    if ( 0 != os_create_thread( &handle->hthread_device_msg,
-                                NULL,
-                                ( sp_thread_func_t )device_accept_center,
-                                ( void * )handle ) )
-    {
-        debug_error( "pthread_create error \n");
-        return NULL;
-    }
-
-    if ( 0 != os_create_thread( &handle->hthread_client_msg,
-                                NULL, (sp_thread_func_t)client_accept_center,
-                                ( void * )handle ) )
-    {
-        debug_error( "pthread_create error \n");
-        return NULL;
-    }
-
-    if ( 0 != os_create_thread( &handle->hthread_flush,
-                                NULL,
-                                (sp_thread_func_t)flush_center,
-                                ( void * )handle ) )
-    {
-        debug_error( "pthread_create error \n");
-        return NULL;
-    }
-
     return handle;
 }
 
-void tcp_server_destroy( TCP_SERVER_HANDLE handle )
+void tcp_server_destroy(TCP_SERVER_HANDLE handle)
 {
-    if ( handle->client_sock_fd > 0 )
+    if (NULL == handle)
     {
-        udp_close( handle->client_sock_fd );
+        return;
     }
-    if ( handle->device_sock_fd > 0 )
+    if (handle->epoll_fd > 0)
     {
-        udp_close( handle->device_sock_fd );
+        close(handle->epoll_fd);
     }
-    if ( handle->distributed_sock_fd > 0 )
+    if (handle->client_sock_fd > 0)
     {
-        udp_close( handle->distributed_sock_fd );
+        udp_close(handle->client_sock_fd);
+    }
+    if (handle->device_sock_fd > 0)
+    {
+        udp_close(handle->device_sock_fd);
+    }
+    if (handle->distributed_sock_fd > 0)
+    {
+        udp_close(handle->distributed_sock_fd);
     }
 
-    os_close_thread( handle->hthread_distributed );
-    os_close_thread( handle->hthread_device_msg );
-    os_close_thread( handle->hthread_client_msg );
-    os_close_thread( handle->hthread_flush );
 
-    distributed_mgr_destroy( handle->hdistributed_mgr );
-    proxy_mgr_destroy( handle->hproxy_mgr );
-    device_mgr_destroy( handle->hdev_mgr );
+    os_close_thread(handle->hthread_distributed);
+    os_close_thread(handle->hthread_device_msg);
+    os_close_thread(handle->hthread_client_msg);
+    os_close_thread(handle->hthread_flush);
 
-    free( handle );
+    distributed_mgr_destroy(handle->hdistributed_mgr);
+    proxy_mgr_destroy(handle->hproxy_mgr);
+    device_mgr_destroy(handle->hdev_mgr);
+
+    free(handle);
 }
 
-static void * distributed_accept_center( void * arg )
+static void * distributed_accept_center(void * arg)
 {
-    int32  new_fd;
-    int8   peer_ip[16];
-    uint16 peer_port;
-    TcpServerObject *handle = ( TcpServerObject * )arg;
-    while( 1 )
+    int  new_fd;
+    char   peer_ip[16];
+    unsigned short peer_port;
+
+    /*
+    * 声明epoll_event结构体变量ev，变量ev用于注册事件，
+    * 数组events用于回传需要处理的事件
+    */
+    struct epoll_event ev, events[MAX_EVENTS];
+    // 生成用于处理accept的epoll专用文件描述符
+
+    ev.data.fd = handle->distributed_sock_fd;
+    //设置这个文件描述符需要epoll监控的事件
+    /*
+     * EPOLLIN代表文件描述符读事件
+     *accept, recv都是读事件
+     */
+    ev.events = EPOLLIN;
+    /*
+     * 注册epoll事件
+     * 函数epoll_ctl中&ev参数表示需要epoll监视的listen_st这个socket中的一些事件
+     */
+    epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, handle->distributed_sock_fd, &ev);
+
+    TCP_SERVER_OBJECT *handle = (TCP_SERVER_OBJECT *)arg;
+    while(1)
     {
-        memset( peer_ip, 0, sizeof( peer_ip ) );
-        if ( ( new_fd = tcp_accept( handle->distributed_sock_fd, peer_ip, &peer_port ) ) > 0 )
+
+
+        int nfds = epoll_wait(epfd, events, MAXSOCKET, -1);
+        if (nfds == -1)
         {
-            debug_print("new connect in [distributed]\n");
-            distributed_mgr_add( handle->hdistributed_mgr, new_fd );
+            printf("epoll_wait failed ! error message :%s \n", strerror(errno));
+            break;
         }
-    }
-
-    return NULL;
-}
-
-static void * device_accept_center( void * arg )
-{
-    int32  new_fd;
-    int8   peer_ip[16];
-    uint16 peer_port;
-    TcpServerObject *handle = ( TcpServerObject * )arg;
-    while( 1 )
-    {
-        memset( peer_ip, 0, sizeof( peer_ip ) );
-        if ( ( new_fd = tcp_accept( handle->device_sock_fd, peer_ip, &peer_port ) ) > 0 )
+        int i = 0;
+        for (; i < nfds; i++)
         {
-            debug_print("new device connect in  %s:%d \n", peer_ip, peer_port );
-            proxy_mgr_dev_add( handle->hproxy_mgr, new_fd );
-        }
-    }
-
-    return NULL;
-}
-
-static void * client_accept_center( void * arg )
-{
-    int32  new_fd;
-    int8   peer_ip[16];
-    uint16 peer_port;
-    TcpServerObject *handle = ( TcpServerObject * )arg;
-    while( 1 )
-    {
-        memset( peer_ip, 0, sizeof( peer_ip ) );
-        if ( ( new_fd = tcp_accept( handle->client_sock_fd, peer_ip, &peer_port ) ) > 0 )
-        {
-            if ( proxy_mgr_clt_add( handle->hproxy_mgr, new_fd ) )
+            if (events[i].data.fd < 0)
+                continue;
+            if (events[i].data.fd == listen_st)
             {
-                debug_print("new client connect in %s:%d \n", peer_ip, peer_port );
-                proxy_mgr_clt_add( handle->hproxy_mgr, new_fd );
+                //接收客户端socket
+                int client_st = server_accept(listen_st);
+                /*
+                 * 监测到一个用户的socket连接到服务器listen_st绑定的端口
+                 *
+                 */
+                if (client_st < 0)
+                {
+                    continue;
+                }
+                //设置客户端socket非阻塞
+                setnonblock(client_st);
+                //将客户端socket加入到epoll池中
+                struct epoll_event client_ev;
+                client_ev.data.fd = client_st;
+                client_ev.events = EPOLLIN | EPOLLERR | EPOLLHUP;
+                epoll_ctl(epfd, EPOLL_CTL_ADD, client_st, &client_ev);
+                /*
+                 * 注释：当epoll池中listen_st这个服务器socket有消息的时候
+                 * 只可能是来自客户端的连接消息
+                 * recv,send使用的都是客户端的socket，不会向listen_st发送消息的
+                 */
+                continue;
+            }
+            //客户端有事件到达
+            if (events[i].events & EPOLLIN)
+            {
+                //表示服务器这边的client_st接收到消息
+                if (socket_recv(events[i].data.fd) < 0)
+                {
+                    close_socket(events[i].data.fd);
+                    //接收数据出错或者客户端已经关闭
+                    events[i].data.fd = -1;
+                    /*这里continue是因为客户端socket已经被关闭了，
+                     * 但是这个socket可能还有其他的事件，会继续执行其他的事件，
+                     * 但是这个socket已经被设置成-1
+                     * 所以后面的close_socket()函数都会报错
+                     */
+                    continue;
+                }
+                /*
+                 * 此处不能continue，因为每个socket都可能有多个事件同时发送到服务器端
+                 * 这也是下面语句用if而不是if-else的原因，
+                 */
+
+            }
+            //客户端有事件到达
+            if (events[i].events & EPOLLERR)
+            {
+                printf("EPOLLERR\n");
+                //返回出错事件，关闭socket，清理epoll池，当关闭socket并且events[i].data.fd=-1,epoll会自动将该socket从池中清除
+                close_socket(events[i].data.fd);
+                events[i].data.fd = -1;
+                continue;
+            }
+            //客户端有事件到达
+            if (events[i].events & EPOLLHUP)
+            {
+                printf("EPOLLHUP\n");
+                //返回挂起事件，关闭socket，清理epoll池
+                close_socket(events[i].data.fd);
+                events[i].data.fd = -1;
+                continue;
             }
         }
+
+
+
+
+        memset(peer_ip, 0, sizeof(peer_ip));
+        if ((new_fd = tcp_accept(handle->distributed_sock_fd, peer_ip, &peer_port)) > 0)
+        {
+            debug_print("new connect in [distributed]\n");
+            distributed_mgr_add(handle->hdistributed_mgr, new_fd);
+        }
     }
 
     return NULL;
 }
 
-static void * flush_center( void * arg )
+static void * dev_thread_center(long user_info)
 {
-    TcpServerObject *handle = ( TcpServerObject * )arg;
-    while( 1 )
+    int  new_fd;
+    int8   peer_ip[16];
+    uint16 peer_port;
+    TCP_SERVER_OBJECT *handle = (TCP_SERVER_OBJECT *)user_info;
+    while(1)
     {
-        proxy_mgr_flush( handle->hproxy_mgr );
-        os_sleep_sec( 10 );
+        memset(peer_ip, 0, sizeof(peer_ip));
+        if ((new_fd = tcp_accept(handle->device_sock_fd, peer_ip, &peer_port)) > 0)
+        {
+            debug_print("new device connect in  %s:%d \n", peer_ip, peer_port);
+            // proxy_mgr_dev_add(handle->hproxy_mgr, new_fd);
+        }
     }
 
     return NULL;
 }
 
-static TcpServerObject * instance( void )
+static void * flush_center(void * arg)
 {
-    static TcpServerObject *handle = NULL;
-    if ( NULL == handle )
+    TCP_SERVER_OBJECT *handle = (TCP_SERVER_OBJECT *)arg;
+    while(1)
     {
-        handle = ( TcpServerObject * )malloc( sizeof( TcpServerObject ) );
-        memset( handle, 0, sizeof( TcpServerObject ) );
+        proxy_mgr_flush(handle->hproxy_mgr);
+        os_sleep_sec(10);
+    }
+
+    return NULL;
+}
+
+static TCP_SERVER_OBJECT * instance(void)
+{
+    static TCP_SERVER_OBJECT *handle = NULL;
+    if (NULL == handle)
+    {
+        handle = (TCP_SERVER_OBJECT *)malloc(sizeof(TCP_SERVER_OBJECT));
+        memset(handle, 0, sizeof(TCP_SERVER_OBJECT));
     }
 
     return handle;

@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-unsigned int string_to_hash ( void* pstring );
+unsigned int string_to_hash(void* pstring);
 
 #ifdef __cplusplus
 }

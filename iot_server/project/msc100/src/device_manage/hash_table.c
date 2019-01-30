@@ -7,7 +7,6 @@
 #include "hash_table.h"
 #include "hash_table_private.h"
 
-
 /*
 Credit for primes table: Aaron Krowne
  http://br.endernet.org/~akrowne/
@@ -182,7 +181,7 @@ hashtable_remove(struct hashtable *h, void *k)
 
     struct entry *e;
     struct entry **pE;
-    void *v;
+    //void *v;
     unsigned int hashvalue, index;
 
     hashvalue = hash(h,k);
@@ -196,9 +195,9 @@ hashtable_remove(struct hashtable *h, void *k)
         {
             *pE = e->next;
             h->entrycount--;
-            v = e->v;
+            //v = e->v;
             // added by hehao, static array.
-			   // freekey(e->k);
+		    // freekey(e->k);
             free(e);
             //cky removed, because this is already a null value.
 			//return v;

@@ -6,15 +6,15 @@ extern "C" {
 #endif
 
 #include <core/core.h>
-#include <device_manage/device_manage.h>
 
 #define PORT_DEV    8010
 #define PORT_CLT    8020
 
-typedef struct _TCP_SERVER_OBJECT * TCP_SERVER_HANDLE;
+typedef struct _DEV_MGR_OBJECT * DEV_MGR_HANDLE;
 
-TCP_SERVER_HANDLE tcp_server_create( void );
-void              tcp_server_destroy( TCP_SERVER_HANDLE handle );
+DEV_MGR_HANDLE dev_mgr_create(void);
+void           dev_mgr_destroy(DEV_MGR_HANDLE handle);
+void           dev_mgr_unit_test(void);
 
 #ifdef __cplusplus
 }

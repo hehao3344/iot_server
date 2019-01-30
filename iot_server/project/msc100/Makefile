@@ -31,6 +31,12 @@ PROJECT_MSGH_DIR      = $(PROJECT_SRC_DIR)/msg_handle
 # Component source
 ####################################################################################
 COM_PROJECT_SRC =  \
+                $(PROJECT_DEVMGR_DIR)/hash_table.c \
+                $(PROJECT_DEVMGR_DIR)/hash_table_itr.c \
+                $(PROJECT_DEVMGR_DIR)/hash_value.c \
+                $(PROJECT_DEVMGR_DIR)/dev_param.c \
+                $(PROJECT_DEVMGR_DIR)/dev_mgr.c \
+                $(PROJECT_MSGH_DIR)/json_msg_handle.c \
                 $(PROJECT_SRC_DIR)/main.cpp
 
 # Local include directory
@@ -40,15 +46,13 @@ LOCAL_INC           += -Iinclude -I$(PROJECT_SRC_DIR)  $(EXTERNAL_INC_FLAGS) -I$
 LOCAL_INC           +=
 
 # Add your Local Define flags here
-# NOTE: dlna-microstack should add those defination.
-LOCAL_DEFINE        += -DINCLUDE_FEATURE_VOLUME -DINCLUDE_FEATURE_DISPLAY -DINCLUDE_FEATURE_PLAYSINGLEURI -DINCLUDE_WINDOWS_MEDIA -DNOT_HAVE_SA_LEN -DUSE_TCP_LOOPBACK -DHAVE_CONFIG_H -D_GNU_SOURCE
+LOCAL_DEFINE        += -D_GNU_SOURCE
 
 # CXX include directory
 LOCAL_CPPINC        += $(LOCAL_INC)
 
 CFLAGS              += $(LOCAL_INC)     $(LOCAL_DEFINE)
 CXXFLAGS            += $(LOCAL_CPPINC)  $(LOCAL_DEFINE)
-
 SRCS                += $(COM_PROJECT_SRC)
 
 objects             = $(patsubst %.S,%,$(patsubst %.cpp,%,$(patsubst %.c,%,$(SRCS))))

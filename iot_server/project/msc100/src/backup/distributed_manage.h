@@ -25,11 +25,11 @@ typedef struct DistributedMgrEnv
     DEVICE_MGR_HANDLE hdev_mgr;
 } DistributedMgrEnv;
 
-typedef struct DistributedManageObject * DISTRIBUTED_MANAGE_HANDLE;
+typedef struct _DISTRIBUTED_MGR_OBJECT * DISTRIBUTED_MGR_HANDLE;
 
-DISTRIBUTED_MANAGE_HANDLE distributed_mgr_create( DistributedMgrEnv *env );
-boolean distributed_mgr_add( DISTRIBUTED_MANAGE_HANDLE handle, int32 sock_fd );
-void    distributed_mgr_destroy( DISTRIBUTED_MANAGE_HANDLE handle );
+DISTRIBUTED_MANAGE_HANDLE distributed_mgr_create(DistributedMgrEnv *env);
+MSG_QUEUE_HANDLE distributed_mgr_get_msg_queue(DISTRIBUTED_MGR_HANDLE handle);
+void             distributed_mgr_destroy(DISTRIBUTED_MANAGE_HANDLE handle);
 
 #ifdef __cplusplus
 }

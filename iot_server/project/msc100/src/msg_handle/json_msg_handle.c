@@ -5,53 +5,85 @@
 #include <unistd.h>
 
 #include <json/cjson.h>
+#include <core/core.h>
 
 #include "json_msg_handle.h"
 
-/*----------------------------------------------*
- * 宏定义                                       *
- *----------------------------------------------*/
+typedef int (*exec_func)(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
 
-/*----------------------------------------------*
- * 类型定义                                         *
- *----------------------------------------------*/
 typedef struct _JSON_MSG_HDL_OBJECT
 {
     json_msg_cb cb;
     void * arg;
 } JSON_MSG_HDL_OBJECT;
 
-/*----------------------------------------------*
- * 内部函数声明                                       *
- *----------------------------------------------*/
-static int inner_msg_get_is_request(char * buffer, int len);
-static int msg_is_inner_response(char * buffer);
-static void inner_msg_pull_center(long user_info);
+typedef struct _JSON_HANDLE_PARAM
+{
+    char * method;
+    exec_func exec_fn;
+    int  send_resp;
+} JSON_HANDLE_PARAM;
+
+static int dev_up_msg(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
+static int dev_report_msg(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
+
+static JSON_HANDLE_PARAM json_handle_tbl[] =
+{
+    {"up_msg",      dev_up_msg,       1},  /* 注册 */
+    {"report_msg",  dev_report_msg,   0},  /* 上报消息 */
+};
 
 JMH_HANDLE json_msg_handle_create(void)
 {
     JSON_MSG_HDL_OBJECT * handle = (JSON_MSG_HDL_OBJECT *)calloc(1, sizeof(JSON_MSG_HDL_OBJECT));
     if (NULL == handle)
     {
-        control_err("malloc failed \n");
+        debug_error("malloc failed \n");
         return NULL;
     }
 
     return handle;
-create_failed:
-    json_msg_handle_destroy(handle);
-    return NULL;
 }
 
-int json_msg_handle_msg(JMH_HANDLE handle, char * buffer, int len)
+/* 调用者可以使用 strlen(resp_buf)的长度判断是否需要发送 */
+int json_msg_handle_msg(JMH_HANDLE handle, char * buffer, int len, char * resp_buf, int resp_buf_len, void * ext_arg)
 {
     if ((NULL == handle) || (NULL == buffer))
     {
-        debug_err("invalid param \n");
+        debug_error("invalid param \n");
         return -1;
     }
 
+    cJSON *root     = NULL;
+    cJSON *sub_obj  = NULL;
+    root = cJSON_Parse(buffer);
+    if (NULL == root)
+    {
+        debug_error("cJSON_Parse error [%s] !\n", buffer);
+        return -1;
+    }
 
+    sub_obj = cJSON_GetObjectItem(root, "method");
+    if (NULL != sub_obj)
+    {
+        int i;
+        for (i=0; i<ARRAY_SIZE(json_handle_tbl); i++)
+        {
+            if (0 == strcmp(json_handle_tbl[i].method, sub_obj->valuestring))
+            {
+                json_handle_tbl[i].exec_fn(handle, buffer, resp_buf, resp_buf_len, ext_arg);
+                break;
+            }
+        }
+    }
+    else
+    {
+        debug_info("json invalid [%s] \n", buffer);
+    }
+
+    cJSON_Delete(root);
+
+    return 0;
 }
 
 void json_msg_handle_set_cb(JMH_HANDLE handle, json_msg_cb cb, void * arg)
@@ -68,18 +100,6 @@ void json_msg_handle_destroy(JMH_HANDLE handle)
 {
     if (NULL != handle)
     {
-        if (NULL != handle->rthread_inner_msg)
-        {
-            rthread_delete(handle->rthread_inner_msg,    handle->ttask_inner_msg);
-            rthread_wait_exit(handle->rthread_inner_msg, handle->ttask_inner_msg);
-            rthread_free(handle->rthread_inner_msg,      handle->ttask_inner_msg);
-            handle->ttask_inner_msg = NULL;
-        }
-        if (NULL != handle->im_qt_handle)
-        {
-            inner_msg_destroy(handle->im_qt_handle);
-        }
-
         free(handle);
     }
 }
@@ -87,60 +107,6 @@ void json_msg_handle_destroy(JMH_HANDLE handle)
 /*******************************************************************************
 * static function.
 *******************************************************************************/
-static void inner_msg_pull_center(long user_info)
-{
-#define MAX_RECV_BUF_LEN   1024
-    int ret = -1;
-    // char response[512];
-    char * recv_buf = malloc(MAX_RECV_BUF_LEN);
-    if (NULL == recv_buf)
-    {
-        control_err("not enough memory \n");
-        return;
-    }
-    JSON_MSG_HDL_OBJECT * handle = (JSON_MSG_HDL_OBJECT *)user_info;
-    if (NULL == handle)
-    {
-        control_err("invalid param \n");
-        return;
-    }
-
-    while (1)
-    {
-        if (1 == rthread_is_destroyed(handle->rthread_inner_msg, handle->ttask_inner_msg))
-        {
-            control_info("inform_center destroyed \n");
-            break;
-        }
-
-        /* 注意 从 im_qt_handle里收到的数据有可能来自external_event */
-        ret = inner_msg_recv(handle->im_qt_handle, recv_buf, MAX_RECV_BUF_LEN);
-        if (-1 == ret)
-        {
-            control_err("inner_msg_recv failed \n");
-            continue;
-        }
-        if (1 == msg_is_inner_response(recv_buf))
-        {
-            control_info("recv inner response msg \n");
-            continue;
-        }
-
-        if (IOT_MODULE_QT == ret)
-        {
-            if (1 == inner_msg_get_is_request(recv_buf, strlen(recv_buf)))
-            {
-                if (NULL != handle->msg_cb_fn)
-                {
-                    handle->msg_cb_fn(handle->arg, E_QT, 0, NULL, 0);
-                }
-            }
-        }
-    }
-
-    free(recv_buf);
-}
-
 #if 0
 {
 "method":"up_msg",
@@ -153,12 +119,19 @@ static void inner_msg_pull_center(long user_info)
 }
 }
 #endif
-static int parse_device_msg(char * buffer, MSG_CB_PARAM * cb_param)
+static int dev_up_msg(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
 {
     int ret = -1;
     cJSON *root = NULL;
     cJSON *sub_obj = NULL;
+    MSG_CB_PARAM  cb_param;
+    JSON_MSG_HDL_OBJECT * handle = (JSON_MSG_HDL_OBJECT *)arg;
+    if (NULL == handle)
+    {
+        return -1;
+    }
 
+    memset(&cb_param, 0, sizeof(MSG_CB_PARAM));
     root = cJSON_Parse(buffer);
     if (NULL == root)
     {
@@ -182,18 +155,18 @@ static int parse_device_msg(char * buffer, MSG_CB_PARAM * cb_param)
     sub_obj = cJSON_GetObjectItem(root, "cc_uuid");
     if (NULL != sub_obj)
     {
-        if (strlen(sub_obj->valuestring) < sizeof(cb_param->cc_uuid))
+        if (strlen(sub_obj->valuestring) < sizeof(cb_param.cc_uuid))
         {
-            strncpy(cb_param->cc_uuid, sub_obj->valuestring, sizeof(cb_param->cc_uuid));
+            strncpy(cb_param.cc_uuid, sub_obj->valuestring, sizeof(cb_param.cc_uuid));
         }
     }
     sub_obj = cJSON_GetObjectItem(root, "req_id");
     if (NULL != sub_obj)
     {
-        cb_param->req_id = sub_obj->valueint;
+        cb_param.req_id = sub_obj->valueint;
     }
 
-    cJSON * attr_obj = cJSON_GetObjectItem(sub_obj, "attr");
+    cJSON * attr_obj = cJSON_GetObjectItem(root, "attr");
     if (NULL == attr_obj)
     {
         debug_error("can't find attr \n");
@@ -205,60 +178,54 @@ static int parse_device_msg(char * buffer, MSG_CB_PARAM * cb_param)
     {
         if (0 == strcmp(cmd_obj->valuestring, "register"))
         {
-            cb_param->e_msg = E_DEV_REGISTER;
+            cb_param.e_msg = E_DEV_REGISTER;
         }
     }
-
     cJSON * ver_obj = cJSON_GetObjectItem(attr_obj, "version");
     if (NULL != ver_obj)
     {
-        if (strlen(ver_obj->valuestring) < sizeof(cb_param->str_arg1))
+        if (strlen(ver_obj->valuestring) < sizeof(cb_param.str_arg1))
         {
-            strncpy(cb_param->str_arg1, sub_obj->valuestring, sizeof(cb_param->str_arg1));
+            strncpy(cb_param.str_arg1, ver_obj->valuestring, sizeof(cb_param.str_arg1));
         }
     }
 
-
-        cb_param->req_id = sub_obj->valueint;
+    cb_param.req_id = sub_obj->valueint;
+    if (NULL != handle->cb)
+    {
+        handle->cb(handle->arg, &cb_param, ext_arg);
+        ret = 0;
+    }
+    cJSON_Delete(root);
 
     return ret;
 }
 
 #if 0
 {
-"method": "request",
-"node_id": "real_param",
-"params":
+"method":"report_msg",
+"cc_uuid":"10001122334455",
+"dev1":
 {
-    "value": "dummy"
+"dev_uuid":"02001122334455",
+"online":"yes",
+"switch":"on",
+},
+"dev2":{
+"dev_uuid":"02001122334456",
+"online":"no",
+"switch":"off"
+},
+"dev3":
+{
+"dev_uuid":"02001122334457",
+"online":"yes",
+"switch":"on",
 }
 }
 #endif
-/* -1 错误 1 该消息为请求实时数据 */
-static int inner_msg_get_is_request(char * buffer, int len)
+static int dev_report_msg(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
 {
-    cJSON *root = NULL;
-    UNUSED_VALUE(len);
-    root = iot_json_parse(buffer);
-    if (NULL == root)
-    {
-        control_err("cJSON_Parse error!\n");
-        return -1;
-    }
-
-    char node_id[32] = {0};
-    if (0 != iot_json_get_string(root, "node_id", node_id, sizeof(node_id)))
-    {
-        control_err("get node_id failed \n");
-        return -1;
-    }
-
-    if (0 != strcmp(node_id, "real_param"))
-    {
-        control_err("invalid node_id %s \n", node_id);
-        return -1;
-    }
-
     return 1;
 }
 
