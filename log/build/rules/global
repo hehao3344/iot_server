@@ -1,0 +1,70 @@
+#
+# Check for MKIT_BASE
+#
+ifndef MKIT_BASE
+$(error MKIT_BASE is not defined.)
+endif
+
+# Global config, refer to "./build/config/Config"
+GLOBAL_CONF         =
+
+CONFIG_FILE = $(MKIT_BASE)/build/config/Config
+include       $(CONFIG_FILE)
+
+ifeq ($(OS_CFG),LINUX)
+include $(MKIT_BASE)/build/config/Linux
+endif
+
+# Folder and variable
+SRC_DIR      = $(MKIT_BASE)
+OUT_DIR      = $(MKIT_BASE)/out
+WEB_PAGE_DIR = project/$(PROJECT_CFG)/web
+OUT_REF      = ./out
+LIB_PREFIX   = lib
+WEBS_BIN_DIR = ./bin/webs
+
+EXEC_NAME       = $(OUT_DIR)/linux/log
+
+INCLUDE_DIR     =   -I$(MKIT_BASE)/framework/include \
+        		    -I$(MKIT_BASE)/framework/src \
+        		    -I$(MKIT_BASE)/framework/src/network \
+        		    -I$(MKIT_BASE)/framework/src/db \
+        		    -I$(MKIT_BASE)/framework/src/net \
+        		    -I$(MKIT_BASE)/framework/src/component \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG) \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/src \
+                    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/apps/src \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/include \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/inc \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/msg_handle
+
+CPPINCLUDE_DIR  += $(INCLUDE_DIR)
+DEFINES         += -DWEBS -D_BSD_SOURCE -D$(OS_CFG) -D_POSIX
+
+CFLAGS          += $(INCLUDE_DIR) $(DEFINES) $(GLOBAL_CONF)
+CXXFLAGS        += $(CPPINCLUDE_DIR) $(GLOBAL_CONF)
+
+#
+# Compose object file path
+#
+OBJPATH_RELEASE_STATIC          = $(TO_BASE)/build/Linux/release
+OBJPATH_DEBUG_STATIC            = $(TO_BASE)/build/Linux/debug
+
+######################################################
+# Compile config release or debug
+######################################################
+ifeq ($(TARGET_CFG),release)
+DEP_DIR                      = $(OBJPATH_RELEASE_STATIC)/dep
+LIB_DIR                      = $(OBJPATH_RELEASE_STATIC)/lib
+OBJS_DIR                     = $(OBJPATH_RELEASE_STATIC)/obj
+LD_LIB_DIR                   = release
+GLOBAL_CONF                  += -DNDEBUG -O2 -DUNIT_TEST
+endif
+
+ifeq ($(TARGET_CFG),debug)
+DEP_DIR                     = $(OBJPATH_DEBUG_STATIC)/dep
+LIB_DIR                     = $(OBJPATH_DEBUG_STATIC)/lib
+OBJS_DIR                    = $(OBJPATH_DEBUG_STATIC)/obj
+LD_LIB_DIR                  = debug
+GLOBAL_CONF                 += -D_DEBUG -DUNIT_TEST -DDEBUG
+endif

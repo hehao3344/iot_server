@@ -25,6 +25,7 @@ FRAMEWORK_SRC_DIR      = src
 FRAMEWORK_CORE_DIR     = $(FRAMEWORK_SRC_DIR)/core
 FRAMEWORK_DB_DIR       = $(FRAMEWORK_SRC_DIR)/db
 FRAMEWORK_JSON_DIR     = $(FRAMEWORK_SRC_DIR)/json
+FRAMEWORK_LOG_DIR      = $(FRAMEWORK_SRC_DIR)/log
 
 ####################################################################################
 # Component source
@@ -41,6 +42,9 @@ COM_FRAMEWORK_SRC =  \
                 $(FRAMEWORK_JSON_DIR)/jsonparse.c \
                 $(FRAMEWORK_JSON_DIR)/cjson.c \
                 $(FRAMEWORK_JSON_DIR)/jsontree.c \
+                $(FRAMEWORK_LOG_DIR)/debug_util.c \
+                $(FRAMEWORK_LOG_DIR)/msg_util.c \
+                $(FRAMEWORK_LOG_DIR)/log.c \
                 $(FRAMEWORK_DB_DIR)/id_mgr.c
 
 # Local include directory

@@ -1,0 +1,37 @@
+#
+# lib
+#
+# Rule definitions for building libraries
+#
+LIB_STATIC        = $(LIB_DIR)/$(LIB_PREFIX)$(target).a
+
+all: $(LIB_STATIC)
+
+$(LIB_STATIC): $(foreach o,$(objects),$(COM_OBJPATH_STATIC)/$(o).o)
+	@$(ECHO) "Building $(TARGET_CFG) library >>> $(notdir $@) "
+	@$(MKDIR) $(@D)
+	@$(RM) $@
+#	@$(AR) -cru $@ $^
+	@$(AR) -cr $@ $^
+	@$(RANLIB) $@
+
+ifneq ($(filter clean distclean rebuild, $(MAKECMDGOALS)),)
+.PHONY: clean distclean
+clean:
+	$(RM) $(LIB_DIR)
+	$(RM) $(OBJS_DIR)/$(CUR_DIR)
+	$(RM) $(DEP_DIR)/$(CUR_DIR)
+distclean:
+	$(RM) $(LIB_DIR)
+	$(RM) $(OBJS_DIR)
+	$(RM) $(DEP_DIR)
+rebuild:
+	$(MAKE) clean
+	$(MAKE)
+else
+#
+# Include the compile rules and automatically generated dependency files
+#
+include $(MKIT_BASE)/build/rules/compile
+sinclude $(addprefix $(DEP_DIR)/$(CUR_DIR)/,$(addsuffix .d,$(objects)))
+endif

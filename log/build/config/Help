@@ -1,0 +1,51 @@
+======================================================================================
+Please specify the platform, the project and hardware device.
+Step 1:
+    Modify the config file according to your platform, project and your hardware.
+    The config file always named "Config", always in the path: ./Build/Coach/Config/
+    Example:
+        OS_CFG          = COACH
+        FW_VERSION_CFG  = 0x126
+        PLATFORM_CFG    = C12P
+        PROJECT_CFG     = HD5134
+        SENSOR_CFG      = Mt9p401
+        LCD_CFG         = Unipac_Ups051
+        TARGET_CFG      = release
+    Supported options:
+        PLATFORM_CFG:   C12P            C14P
+        PROJECT_CFG:    DV1A            HD5134
+        SENSOR_CFG:     Mt9p401
+        LCD_CFG         Unipac_Ups051   Sharp_Ls030
+        TARGET_CFG:     release         debug
+Step 2:
+    sde-make.
+======================================================================================
+Fast compile options:
+    sde-make libs:
+        Compile all librarys.
+    sde-make libframework
+        Compile framework library.
+    sde-make libsystem
+        Compile system library.
+    sde-make liblogic
+        Compile logic library.
+    sde-make libplatform
+        Compile platform library.
+    sde-make libproject
+        Compile project library.
+    sde-make libunittest
+        Compile unittest library.
+Some useful compile targets:
+    sde-make rebuild
+        Rebuild all.
+    sde-make clean
+        Clean all librarys, depend files and objects.
+    sde-make distclean
+        Clean all depend file, library, objects and "Out" Directory.
+    sde-make cleanlib
+        Clean all libs.
+    sde-make post_bulid
+        Generate all Media files and bin files to "./Out" directory.
+    sde-make pre_bulid
+        Generate Main.ld in "Out" Directory.
+======================================================================================
