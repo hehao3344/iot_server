@@ -3,7 +3,7 @@
 
 #include "../log/debug_util.h"
 
-#define IOT_SERVER_PRINT
+//#define IOT_SERVER_PRINT
 
 #ifdef  IOT_SERVER_PRINT
 #define debug_error(fmt,args...) \
@@ -17,7 +17,7 @@
 #else
 #define filename(x) (strrchr(x,'/')?strrchr(x,'/')+1:x)
 #define debug_error(fmt,...)  do { if (1) printf("[iot_server_pr]error: %s:%s():%d " fmt, filename(__FILE__), __func__,__LINE__, ##__VA_ARGS__); } while (0)
-#define debug_info(fmt,...)   do { if (1) printf("[iot_server_pr]%s:%s():%d: " fmt, filename(__FILE__),__func__, __LINE__,##__VA_ARGS__); } while (0)
+#define debug_print(fmt,...)  do { if (1) printf("[iot_server_pr]%s:%s():%d: " fmt, filename(__FILE__),__func__, __LINE__,##__VA_ARGS__); } while (0)
 #define debug_info(fmt,...)   do { if (1) printf("[iot_server_pr]%s:%s():%d: " fmt, filename(__FILE__),__func__, __LINE__,##__VA_ARGS__); } while (0)
 #define debug_dbg(fmt,...)    do { if (1) printf("[iot_server_pr]%s:%s():%d: " fmt, filename(__FILE__), __func__, __LINE__, ##__VA_ARGS__); } while (0)
 #endif

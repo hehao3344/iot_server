@@ -20,17 +20,20 @@ typedef struct _JSON_MSG_HDL_OBJECT
 typedef struct _JSON_HANDLE_PARAM
 {
     char * method;
+    char * cmd;
     exec_func exec_fn;
     int  send_resp;
 } JSON_HANDLE_PARAM;
 
-static int dev_up_msg(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
-static int dev_report_msg(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
+static int dev_up_msg_register(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
+static int dev_up_msg_register_heart_beat(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
+static int dev_up_msg_update_status(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
 
 static JSON_HANDLE_PARAM json_handle_tbl[] =
 {
-    {"up_msg",      dev_up_msg,       1},  /* 注册 */
-    {"report_msg",  dev_report_msg,   0},  /* 上报消息 */
+    {"up_msg",      "register",         dev_up_msg_register,       1},  /* 注册 */
+    {"up_msg",      "heart_beat",       dev_up_msg_register_heart_beat,   1},  /* 心跳 */
+    {"report_msg",  "updata_status",    dev_up_msg_update_status,   0},  /* 上报消息 */
 };
 
 JMH_HANDLE json_msg_handle_create(void)
@@ -56,6 +59,9 @@ int json_msg_handle_msg(JMH_HANDLE handle, char * buffer, int len, char * resp_b
 
     cJSON *root     = NULL;
     cJSON *sub_obj  = NULL;
+
+    cJSON *attr_obj  = NULL;
+    cJSON *cmd_obj  = NULL;
     root = cJSON_Parse(buffer);
     if (NULL == root)
     {
@@ -63,16 +69,25 @@ int json_msg_handle_msg(JMH_HANDLE handle, char * buffer, int len, char * resp_b
         return -1;
     }
 
-    sub_obj = cJSON_GetObjectItem(root, "method");
-    if (NULL != sub_obj)
+    attr_obj = cJSON_GetObjectItem(root, "attr");
+    if (NULL != attr_obj)
     {
-        int i;
-        for (i=0; i<ARRAY_SIZE(json_handle_tbl); i++)
+        cmd_obj = cJSON_GetObjectItem(attr_obj, "cmd");
+        if (NULL != cmd_obj)
         {
-            if (0 == strcmp(json_handle_tbl[i].method, sub_obj->valuestring))
+            debug_info("==== [%s] !\n", sub_obj->valuestring);
+            int i;
+            for (i=0; i<ARRAY_SIZE(json_handle_tbl); i++)
             {
-                json_handle_tbl[i].exec_fn(handle, buffer, resp_buf, resp_buf_len, ext_arg);
-                break;
+                debug_info("==== [%s] !\n", sub_obj->valuestring);
+                debug_info("==== [%s] !\n", cmd_obj->valuestring);
+
+                if ((0 == strcmp(json_handle_tbl[i].method, sub_obj->valuestring)) &&
+                    (0 == strcmp(json_handle_tbl[i].cmd, cmd_obj->valuestring)))
+                {
+                    json_handle_tbl[i].exec_fn(handle, buffer, resp_buf, resp_buf_len, ext_arg);
+                    break;
+                }
             }
         }
     }
@@ -80,6 +95,41 @@ int json_msg_handle_msg(JMH_HANDLE handle, char * buffer, int len, char * resp_b
     {
         debug_info("json invalid [%s] \n", buffer);
     }
+
+#if 0
+    sub_obj = cJSON_GetObjectItem(root, "method");
+    if (NULL != sub_obj)
+    {
+        debug_info("==== [%s] !\n", sub_obj->valuestring);
+        attr_obj = cJSON_GetObjectItem(root, "attr");
+        if (NULL != attr_obj)
+        {
+            debug_info("==== [%s] !\n", sub_obj->valuestring);
+            cmd_obj = cJSON_GetObjectItem(attr_obj, "cmd");
+            if (NULL != cmd_obj)
+            {
+                debug_info("==== [%s] !\n", sub_obj->valuestring);
+                int i;
+                for (i=0; i<ARRAY_SIZE(json_handle_tbl); i++)
+                {
+                    debug_info("==== [%s] !\n", sub_obj->valuestring);
+                    debug_info("==== [%s] !\n", cmd_obj->valuestring);
+
+                    if ((0 == strcmp(json_handle_tbl[i].method, sub_obj->valuestring)) &&
+                        (0 == strcmp(json_handle_tbl[i].cmd, cmd_obj->valuestring)))
+                    {
+                        json_handle_tbl[i].exec_fn(handle, buffer, resp_buf, resp_buf_len, ext_arg);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        debug_info("json invalid [%s] \n", buffer);
+    }
+#endif
 
     cJSON_Delete(root);
 
@@ -119,7 +169,7 @@ void json_msg_handle_destroy(JMH_HANDLE handle)
 }
 }
 #endif
-static int dev_up_msg(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
+static int dev_up_msg_register(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
 {
     int ret = -1;
     cJSON *root = NULL;
@@ -203,6 +253,91 @@ static int dev_up_msg(void * arg, char *buffer, char *resp_buf, int buf_len, voi
 
 #if 0
 {
+"method":"up_msg",
+"cc_uuid":"10001122334455",
+"req_id":123456789,
+"attr":
+{
+    "cmd":"heart_beat",
+}
+}
+#endif
+static int dev_up_msg_register_heart_beat(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
+{
+    int ret = -1;
+    cJSON *root = NULL;
+    cJSON *sub_obj = NULL;
+    MSG_CB_PARAM  cb_param;
+    JSON_MSG_HDL_OBJECT * handle = (JSON_MSG_HDL_OBJECT *)arg;
+    if (NULL == handle)
+    {
+        return -1;
+    }
+
+    memset(&cb_param, 0, sizeof(MSG_CB_PARAM));
+    root = cJSON_Parse(buffer);
+    if (NULL == root)
+    {
+        debug_print("cJSON_Parse error!\n");
+        return -1;
+    }
+
+    sub_obj = cJSON_GetObjectItem(root, "method");
+    if (NULL != sub_obj)
+    {
+        if (0 != strcmp(sub_obj->valuestring, "up_msg"))
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        return -1;
+    }
+
+    sub_obj = cJSON_GetObjectItem(root, "cc_uuid");
+    if (NULL != sub_obj)
+    {
+        if (strlen(sub_obj->valuestring) < sizeof(cb_param.cc_uuid))
+        {
+            strncpy(cb_param.cc_uuid, sub_obj->valuestring, sizeof(cb_param.cc_uuid));
+        }
+    }
+    sub_obj = cJSON_GetObjectItem(root, "req_id");
+    if (NULL != sub_obj)
+    {
+        cb_param.req_id = sub_obj->valueint;
+    }
+
+    cJSON * attr_obj = cJSON_GetObjectItem(root, "attr");
+    if (NULL == attr_obj)
+    {
+        debug_error("can't find attr \n");
+        return -1;
+    }
+
+    cJSON * cmd_obj = cJSON_GetObjectItem(attr_obj, "cmd");
+    if (NULL != cmd_obj)
+    {
+        if (0 == strcmp(cmd_obj->valuestring, "heart_beat"))
+        {
+            cb_param.e_msg = E_DEV_HEART_BEAT;
+        }
+    }
+
+    cb_param.req_id = sub_obj->valueint;
+    if (NULL != handle->cb)
+    {
+        handle->cb(handle->arg, &cb_param, ext_arg);
+        ret = 0;
+    }
+    cJSON_Delete(root);
+
+    return ret;
+}
+
+#if 0
+{
 "method":"report_msg",
 "cc_uuid":"10001122334455",
 "dev1":
@@ -230,7 +365,7 @@ static int dev_up_msg(void * arg, char *buffer, char *resp_buf, int buf_len, voi
 }
 }
 #endif
-static int dev_report_msg(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
+static int dev_up_msg_update_status(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
 {
     int ret = -1;
     cJSON *root = NULL;

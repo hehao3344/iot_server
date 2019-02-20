@@ -232,6 +232,38 @@ int dev_param_register(DEV_PARAM_HANDLE handle, char *cc_id, int hash_value, int
     return 0;
 }
 
+int dev_heart_beat(DEV_PARAM_HANDLE handle, char *cc_id)
+{
+    if ((strlen(cc_id) > MAX_ID_LEN) || (0 == strlen(cc_id)))
+    {
+        debug_print("id length %d invalid \n", (int)strlen(cc_id));
+        return -1;
+    }
+
+    if (0 == id_mgr_id_is_exist(handle->hid_mgr, cc_id))
+    {
+        debug_print("invalid cc_id [%s][register] \n", cc_id);
+        return -1;
+    }
+
+    GW_DEVICE *gw_dev = get_device_by_id(handle, cc_id);
+    if (NULL != gw_dev)
+    {
+        pthread_mutex_lock(&handle->mutex);
+        gw_dev->next_sec   = get_real_time_sec() + TCP_TIMEOUT; // 120 secs.
+        pthread_mutex_unlock(&handle->mutex);
+
+        debug_info("cc %s heart_beat \n", cc_id);
+    }
+    else
+    {
+        debug_info("cc_id:%s unexist \n", cc_id);
+        return -1;
+    }
+
+    return 0;
+}
+
 int dev_param_update(DEV_PARAM_HANDLE handle, char *cc_id, SUB_DEV_NODE * sub_dev)
 {
     if ((strlen(cc_id) > MAX_ID_LEN) || (0 == strlen(cc_id)) || (NULL == sub_dev))

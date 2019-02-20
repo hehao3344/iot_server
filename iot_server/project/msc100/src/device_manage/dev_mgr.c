@@ -349,6 +349,11 @@ static int json_msg_fn(void * arg, MSG_CB_PARAM * cb_param, void * ext_arg)
             dev_param_register(handle->hdev_param, cb_param->cc_uuid, hash_value, sock_fd);
             break;
         }
+        case E_DEV_HEART_BEAT:
+        {
+            dev_heart_beat(handle->hdev_param, cb_param->cc_uuid);
+            break;
+        }
         case E_DEV_INFORM_STATUS:
         {
             int i;
