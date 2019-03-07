@@ -33,6 +33,7 @@ INCLUDE_DIR     =   -I$(MKIT_BASE)/framework/include \
         		    -I$(MKIT_BASE)/framework/src/component \
         		    -I$(MKIT_BASE)/project/$(PROJECT_CFG) \
         		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/src \
+        		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/src/libwebsockets/include \
                     -I$(MKIT_BASE)/project/$(PROJECT_CFG)/apps/src \
         		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/include \
         		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/inc \
