@@ -1,5 +1,5 @@
-#ifndef __TCP_SERVER_H
-#define __TCP_SERVER_H
+#ifndef __DEV_MGR_H
+#define __DEV_MGR_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,4 +20,4 @@ void           dev_mgr_unit_test(void);
 }
 #endif
 
-#endif // __TCP_SERVER_H
+#endif // __DEV_MGR_H

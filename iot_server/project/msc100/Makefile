@@ -36,6 +36,7 @@ COM_PROJECT_SRC =  \
                 $(PROJECT_DEVMGR_DIR)/hash_value.c \
                 $(PROJECT_DEVMGR_DIR)/dev_param.c \
                 $(PROJECT_DEVMGR_DIR)/dev_mgr.c \
+                $(PROJECT_DEVMGR_DIR)/websockets.c \
                 $(PROJECT_MSGH_DIR)/json_msg_handle.c \
                 $(PROJECT_SRC_DIR)/main.cpp
 

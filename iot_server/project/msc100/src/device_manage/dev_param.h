@@ -1,5 +1,5 @@
-#ifndef __CLIENT_MANAGER_H
-#define __CLIENT_MANAGER_H
+#ifndef __DEV_PARAM_H
+#define __DEV_PARAM_H
 
 #include <core/core.h>
 
