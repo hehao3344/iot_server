@@ -8,7 +8,6 @@ extern "C" {
 #include <core/core.h>
 
 #define PORT_DEV    8010
-#define PORT_CLT    8020
 
 typedef struct _DEV_MGR_OBJECT * DEV_MGR_HANDLE;
 

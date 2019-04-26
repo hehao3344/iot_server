@@ -25,6 +25,7 @@ PROJECT_SRC_DIR       = src
 PROJECT_DEVMGR_DIR    = $(PROJECT_SRC_DIR)/device_manage
 PROJECT_UDP_SVR_DIR   = $(PROJECT_SRC_DIR)/udp_server
 PROJECT_TCP_SVR_DIR   = $(PROJECT_SRC_DIR)/tcp_server
+PROJECT_HTTPS_C_DIR   = $(PROJECT_SRC_DIR)/https_client
 PROJECT_MSGH_DIR      = $(PROJECT_SRC_DIR)/msg_handle
 
 ####################################################################################
@@ -37,7 +38,9 @@ COM_PROJECT_SRC =  \
                 $(PROJECT_DEVMGR_DIR)/dev_param.c \
                 $(PROJECT_DEVMGR_DIR)/dev_mgr.c \
                 $(PROJECT_DEVMGR_DIR)/websockets.c \
+                $(PROJECT_DEVMGR_DIR)/ws.c \
                 $(PROJECT_MSGH_DIR)/json_msg_handle.c \
+                $(PROJECT_HTTPS_C_DIR)/https_client.c \
                 $(PROJECT_SRC_DIR)/main.cpp
 
 # Local include directory

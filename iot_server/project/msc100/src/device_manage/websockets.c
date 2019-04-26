@@ -42,7 +42,6 @@ static int callback_http(struct lws *wsi,
 
 static int websocket_write_back(struct lws *wsi_in, char *str, int str_size_in);
 
-
 // callback_dumb_increment
 static int callback_dumb_increment(struct lws *wsi,
                                    enum lws_callback_reasons reason,
@@ -89,9 +88,9 @@ WEBS_HANDLE websockets_create(int bind_port)
     SEND_BUF_NODE * buf_node  = NULL;
 
     int port = bind_port; // 端口号
-    struct lws_context_creation_info info; // 上下文对象的信息
-    //struct lws_context *context;           // 上下文对象指针
-    int opts = 0;                          // 本软件的额外功能选项
+    struct lws_context_creation_info info;  // 上下文对象的信息
+    //struct lws_context *context;          // 上下文对象指针
+    int opts = 0;                           // 本软件的额外功能选项
 
     //设置info，填充info信息体
     memset(&info,0,sizeof(info));
@@ -127,7 +126,7 @@ WEBS_HANDLE websockets_create(int bind_port)
         return NULL;
     }
 
-    printf("starting server with thread:[%d]...\n", lws_get_count_threads(handle->context));
+    printf("starting server with thread:[%d]... bind port %d \n", lws_get_count_threads(handle->context), bind_port);
 
     pthread_mutex_init(&handle->mutex, NULL);
 
@@ -201,7 +200,6 @@ void websockets_destroy(WEBS_HANDLE handle)
         pthread_mutex_destroy(&handle->mutex);
         free(handle);
     }
-
 }
 
 /*******************************************************************************
@@ -246,7 +244,7 @@ static int websocket_write_back(struct lws *wsi_in, char *str, int str_size_in)
     out = (unsigned char *)handle->out_buf;
 
     /* setup the buffer*/
-    memcpy (out + LWS_SEND_BUFFER_PRE_PADDING, str, len );  //要发送的数据从此处拷贝
+    memcpy (out + LWS_SEND_BUFFER_PRE_PADDING, str, len );  // 要发送的数据从此处拷贝
 
     /* write out*/
     n = lws_write(wsi_in, out + LWS_SEND_BUFFER_PRE_PADDING, len, LWS_WRITE_TEXT);  // lws的发送函数
@@ -283,7 +281,6 @@ static int callback_dumb_increment(struct lws *wsi,
             {
                 handle->cb(handle->arg, (char *)in, (int)len);
             }
-            // lws_close_reason(wsi, LWS_CLOSE_STATUS_GOINGAWAY, (unsigned char *)"seeya", 5);
             break;
         }
 
@@ -305,8 +302,11 @@ static int callback_dumb_increment(struct lws *wsi,
 
             websocket_write_back(wsi, handle->send_data, strlen(handle->send_data));
 
-            //websocket_write_back(wsi, "client-data", strlen("client-data"));
-            //sleep(1);
+            break;
+        }
+        case LWS_CALLBACK_CLOSED:
+        {
+            printf("LWS_CALLBACK_CLOSED peer.\n");
             break;
         }
         default:
@@ -332,7 +332,6 @@ static WEBSOCKETS_OBJECT * instance(void)
     return handle;
 }
 
-
 void data_receive_fn(void * arg, char * buffer, int len)
 {
     WEBSOCKETS_OBJECT * handle = (WEBSOCKETS_OBJECT *)arg;
@@ -348,7 +347,7 @@ void websockets_unit_test(void)
 {
     int index;
     char buffer[64];
-    WEBS_HANDLE handle = websockets_create(7681);
+    WEBS_HANDLE handle = websockets_create(8020);
 
     websockets_set_recv_callback(data_receive_fn, handle);
 

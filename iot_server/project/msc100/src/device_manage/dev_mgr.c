@@ -8,14 +8,21 @@
 
 #include <core/core.h>
 
+#include <crypto/sha1.h>
+#include <crypto/base64.h>
+#include <crypto/int_lib.h>
+
+
 #include "msg_handle/json_msg_handle.h"
 #include "dev_param.h"
 #include "hash_value.h"
+#include "ws.h"
 #include "dev_mgr.h"
 
-#define MAX_MSG_LEN         1024
-#define MAX_EVENTS          256     /* 实际作用不大 */
-#define MAXSOCKET           MAX_EVENTS
+#define MAX_MSG_LEN     1024
+//#define MAX_MSG_LEN         4096
+#define MAX_EVENTS      256     /* 实际作用不大 */
+#define MAXSOCKET       MAX_EVENTS
 
 typedef struct _DEV_MGR_OBJECT
 {
@@ -271,8 +278,68 @@ static void dev_thread_center(long param)
                 {
                     /* 处理消息 */
                     debug_info("recv dev msg %s \n", recv_buf);
-                    memset(resp_buf, 0, sizeof(resp_buf));
-                    json_msg_handle_msg(handle->h_jmh, recv_buf, recv_len, resp_buf, sizeof(resp_buf), &events[i].data.fd);
+
+
+
+
+
+#if 0
+                    WS_HANDLE ws_handle = ws_create();
+                    //char * accept_key = computeAcceptKey(recv_buf);
+                    char * accept_key = ws_calculate_accept_key(ws_handle, recv_buf);
+
+//void ws_destroy(WS_HANDLE handle);
+//char * ws_calculate_accept_key(WS_HANDLE handle, const char * buffer);
+//char * ws_handle_payload_data(WS_HANDLE handle, const char *buffer, const int buf_len);
+//char * ws_construct_packet_data(WS_HANDLE handle, const char *message, unsigned long *len);
+
+                    if (NULL != accept_key)
+                    {
+
+                        debug_info("== get accept_key [%s] \n", accept_key);
+
+                        //memset(resp_buf, 0, sizeof(resp_buf));
+
+#define HTTP_RESP "HTTP/1.1 101 Switching Protocols\r\n\
+Upgrade: websocket\r\n\
+Sec-WebSocket-Version: 13\r\n\
+Connection: Upgrade\r\n\
+Server: workerman/3.3.6\r\n\
+Sec-WebSocket-Accept: "
+
+
+                        char send_buf[4096] = {0};
+                        //snprintf(send_buf, sizeof(send_buf), HTTP_RESP, accept_key);
+                        strcat(send_buf, HTTP_RESP);
+                        strcat(send_buf, accept_key);
+                        strcat(send_buf, "\r\n\r\n");
+
+                        tcp_send(events[i].data.fd, send_buf, strlen(send_buf));
+                        debug_info("send %s \n", send_buf);
+
+                        // response(events[i].data.fd, "abcdefg");
+
+                    }
+                    else
+                    {
+                        debug_info("=== %s \n",  ws_handle_payload_data(ws_handle, recv_buf, strlen(recv_buf)));
+
+                        unsigned long len = 0;
+                        debug_info("start send ... \n");
+                        char * send_test = ws_construct_packet_data(ws_handle, "abababc", &len);
+                        tcp_send(events[i].data.fd, send_test, len);
+                        debug_info("start send done \n");
+
+                        //response(events[i].data.fd, "duncan");
+                    }
+
+                    // tcp_close(events[i].data.fd);
+
+                    //tcp_send(events[i].data.fd, "abcd", 4);
+                    //tcp_send(events[i].data.fd, "abcd", 4);
+                    //tcp_send(events[i].data.fd, "abcd", 4);
+#endif
+
                 }
                 /*
                  * 此处不能continue，因为每个socket都可能有多个事件同时发送到服务器端

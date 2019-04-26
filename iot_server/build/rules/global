@@ -30,6 +30,7 @@ INCLUDE_DIR     =   -I$(MKIT_BASE)/framework/include \
         		    -I$(MKIT_BASE)/framework/src/network \
         		    -I$(MKIT_BASE)/framework/src/db \
         		    -I$(MKIT_BASE)/framework/src/net \
+        		    -I$(MKIT_BASE)/framework/src/crypto \
         		    -I$(MKIT_BASE)/framework/src/component \
         		    -I$(MKIT_BASE)/project/$(PROJECT_CFG) \
         		    -I$(MKIT_BASE)/project/$(PROJECT_CFG)/src \

@@ -25,6 +25,7 @@ FRAMEWORK_SRC_DIR      = src
 FRAMEWORK_CORE_DIR     = $(FRAMEWORK_SRC_DIR)/core
 FRAMEWORK_DB_DIR       = $(FRAMEWORK_SRC_DIR)/db
 FRAMEWORK_JSON_DIR     = $(FRAMEWORK_SRC_DIR)/json
+FRAMEWORK_CRYPTO_DIR   = $(FRAMEWORK_SRC_DIR)/crypto
 FRAMEWORK_LOG_DIR      = $(FRAMEWORK_SRC_DIR)/log
 
 ####################################################################################
@@ -45,6 +46,9 @@ COM_FRAMEWORK_SRC =  \
                 $(FRAMEWORK_LOG_DIR)/debug_util.c \
                 $(FRAMEWORK_LOG_DIR)/msg_util.c \
                 $(FRAMEWORK_LOG_DIR)/log.c \
+                $(FRAMEWORK_CRYPTO_DIR)/sha1.c \
+                $(FRAMEWORK_CRYPTO_DIR)/base64.c \
+                $(FRAMEWORK_CRYPTO_DIR)/int_lib.c \
                 $(FRAMEWORK_DB_DIR)/id_mgr.c
 
 # Local include directory

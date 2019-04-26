@@ -12,17 +12,20 @@
 #include "db/id_mgr.h"
 #include "device_manage/dev_mgr.h"
 #include "device_manage/websockets.h"
+#include "https_client/https_client.h"
 #include "db/dev_db_mgr.h"
 
 int main(int argc, char** argv)
 {
-    debug_init(IOT_MODULE_IOT_SERVER, IOT_DEBUG_LEVEL_INFO, (char *)"iot_server");
+    //debug_init(IOT_MODULE_IOT_SERVER, IOT_DEBUG_LEVEL_INFO, (char *)"iot_server");
 
-    websockets_unit_test();
+    //https_client_unit_test();
+
+    //websockets_unit_test();
 
     //id_mgr_unit_test();
     //dev_db_mgr_unit_test();
-    //dev_mgr_unit_test();
+    dev_mgr_unit_test();
 
     return 0;
 }
