@@ -11,6 +11,7 @@
 #include "core/core.h"
 #include "db/id_mgr.h"
 #include "device_manage/dev_mgr.h"
+#include "device_manage/clt_mgr.h"
 #include "device_manage/websockets.h"
 #include "https_client/https_client.h"
 #include "db/dev_db_mgr.h"
@@ -25,7 +26,26 @@ int main(int argc, char** argv)
 
     //id_mgr_unit_test();
     //dev_db_mgr_unit_test();
-    dev_mgr_unit_test();
+    //dev_mgr_unit_test();
+
+    DEV_MGR_HANDLE devm_hanle = dev_mgr_create();
+    if (NULL == devm_hanle)
+    {
+        debug_error("dev_mgr_create failed \n");
+        return -1;
+    }
+
+    CLT_MGR_HANDLE cltm_handle = clt_mgr_create();
+    if (NULL == cltm_handle)
+    {
+        debug_error("clt_mgr_create failed \n");
+        return -1;
+    }
+
+    while(1)
+    {
+        sleep(1);
+    }
 
     return 0;
 }

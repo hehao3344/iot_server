@@ -7,9 +7,6 @@ extern "C" {
 
 #include <core/core.h>
 
-#define PORT_DEV    8020
-#define PORT_CLT    8080
-
 typedef struct _WS_OBJECT * WS_HANDLE;
 
 WS_HANDLE ws_create(void);

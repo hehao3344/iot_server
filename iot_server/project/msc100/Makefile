@@ -36,10 +36,12 @@ COM_PROJECT_SRC =  \
                 $(PROJECT_DEVMGR_DIR)/hash_table_itr.c \
                 $(PROJECT_DEVMGR_DIR)/hash_value.c \
                 $(PROJECT_DEVMGR_DIR)/dev_param.c \
+                $(PROJECT_DEVMGR_DIR)/clt_param.c \
                 $(PROJECT_DEVMGR_DIR)/dev_mgr.c \
-                $(PROJECT_DEVMGR_DIR)/websockets.c \
+                $(PROJECT_DEVMGR_DIR)/clt_mgr.c \
                 $(PROJECT_DEVMGR_DIR)/ws.c \
                 $(PROJECT_MSGH_DIR)/json_msg_handle.c \
+                $(PROJECT_MSGH_DIR)/json_msg_clt.c \
                 $(PROJECT_HTTPS_C_DIR)/https_client.c \
                 $(PROJECT_SRC_DIR)/main.cpp
 

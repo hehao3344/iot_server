@@ -7,38 +7,38 @@
 #include <json/cjson.h>
 #include <core/core.h>
 
-#include "json_msg_handle.h"
+#include "json_msg_clt.h"
 
 typedef int (*exec_func)(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
 
-typedef struct _JSON_MSG_HDL_OBJECT
+typedef struct _JSON_MSG_CLT_OBJECT
 {
     json_msg_cb cb;
     void * arg;
-} JSON_MSG_HDL_OBJECT;
+} JSON_MSG_CLT_OBJECT;
 
-typedef struct _JSON_HANDLE_PARAM
+typedef struct _JSON_CLT_PARAM
 {
     char * method;
     char * cmd;
     exec_func exec_fn;
     int  send_resp;
-} JSON_HANDLE_PARAM;
+} JSON_CLT_PARAM;
 
-static int dev_up_msg_register(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
-static int dev_up_msg_register_heart_beat(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
-static int dev_up_msg_update_status(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
+static int clt_up_msg_bind(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
+static int clt_up_msg_get_param(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
+static int clt_up_msg_set_switch(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
 
-static JSON_HANDLE_PARAM json_handle_tbl[] =
+static JSON_CLT_PARAM json_handle_tbl[] =
 {
-    {"up_msg",      "register",         dev_up_msg_register,              1},  /* 注册 */
-    {"up_msg",      "heart_beat",       dev_up_msg_register_heart_beat,   1},  /* 心跳 */
-    {"report_msg",  "updata_status",    dev_up_msg_update_status,         0},  /* 上报消息 */
+    {"up_msg",      "bind",             clt_up_msg_bind,              1},  /* 绑定 */
+    {"up_msg",      "get_param",        clt_up_msg_get_param,         1},  /* 获取设备属性 */
+    {"up_msg",      "set_switch",       clt_up_msg_set_switch,        1},  /* 设置插座 */
 };
 
-JMH_HANDLE json_msg_handle_create(void)
+JMC_HANDLE json_msg_clt_create(void)
 {
-    JSON_MSG_HDL_OBJECT * handle = (JSON_MSG_HDL_OBJECT *)calloc(1, sizeof(JSON_MSG_HDL_OBJECT));
+    JSON_MSG_CLT_OBJECT * handle = (JSON_MSG_CLT_OBJECT *)calloc(1, sizeof(JSON_MSG_CLT_OBJECT));
     if (NULL == handle)
     {
         debug_error("malloc failed \n");
@@ -49,7 +49,7 @@ JMH_HANDLE json_msg_handle_create(void)
 }
 
 /* 调用者可以使用 strlen(resp_buf)的长度判断是否需要发送 */
-int json_msg_handle_msg(JMH_HANDLE handle, char * buffer, int len, char * resp_buf, int resp_buf_len, void * ext_arg)
+int json_msg_clt_msg(JMC_HANDLE handle, char * buffer, int len, char * resp_buf, int resp_buf_len, void * ext_arg)
 {
     if ((NULL == handle) || (NULL == buffer))
     {
@@ -96,47 +96,13 @@ int json_msg_handle_msg(JMH_HANDLE handle, char * buffer, int len, char * resp_b
         debug_info("json invalid [%s] \n", buffer);
     }
 
-#if 0
-    sub_obj = cJSON_GetObjectItem(root, "method");
-    if (NULL != sub_obj)
-    {
-        debug_info("==== [%s] !\n", sub_obj->valuestring);
-        attr_obj = cJSON_GetObjectItem(root, "attr");
-        if (NULL != attr_obj)
-        {
-            debug_info("==== [%s] !\n", sub_obj->valuestring);
-            cmd_obj = cJSON_GetObjectItem(attr_obj, "cmd");
-            if (NULL != cmd_obj)
-            {
-                debug_info("==== [%s] !\n", sub_obj->valuestring);
-                int i;
-                for (i=0; i<ARRAY_SIZE(json_handle_tbl); i++)
-                {
-                    debug_info("==== [%s] !\n", sub_obj->valuestring);
-                    debug_info("==== [%s] !\n", cmd_obj->valuestring);
-
-                    if ((0 == strcmp(json_handle_tbl[i].method, sub_obj->valuestring)) &&
-                        (0 == strcmp(json_handle_tbl[i].cmd, cmd_obj->valuestring)))
-                    {
-                        json_handle_tbl[i].exec_fn(handle, buffer, resp_buf, resp_buf_len, ext_arg);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        debug_info("json invalid [%s] \n", buffer);
-    }
-#endif
 
     cJSON_Delete(root);
 
     return 0;
 }
 
-void json_msg_handle_set_cb(JMH_HANDLE handle, json_msg_cb cb, void * arg)
+void json_msg_clt_set_cb(JMC_HANDLE handle, json_msg_cb cb, void * arg)
 {
     if (NULL == handle)
     {
@@ -146,7 +112,7 @@ void json_msg_handle_set_cb(JMH_HANDLE handle, json_msg_cb cb, void * arg)
     handle->arg = arg;
 }
 
-void json_msg_handle_destroy(JMH_HANDLE handle)
+void json_msg_clt_destroy(JMC_HANDLE handle)
 {
     if (NULL != handle)
     {
@@ -160,28 +126,49 @@ void json_msg_handle_destroy(JMH_HANDLE handle)
 #if 0
 {
 "method":"up_msg",
-"cc_uuid":"10001122334455",
-"req_id":123456789,
+		"open_id":"XXXXXX",
+		"req_id":123456789,
+"ts":12345678
 "attr":
 {
-    "cmd":"register",
-    "version":"V2.01.01"
+"cmd":"bind",
+"dev_uuid":"02001122334455" /* 中控设备的uuid */
 }
 }
 #endif
-static int dev_up_msg_register(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
+static int clt_up_msg_bind(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
+{
+    /* 没完成 */
+    return 0;
+}
+
+#if 0
+{
+"method":"up_msg",
+"open_id":"XXXXXX",
+"req_id":123456789,
+"ts":12345678
+"attr":
+{
+    "cmd":"get_param"
+}
+}
+#endif
+static int clt_up_msg_get_param(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
 {
     int ret = -1;
     cJSON *root = NULL;
     cJSON *sub_obj = NULL;
-    MSG_CB_PARAM  cb_param;
-    JSON_MSG_HDL_OBJECT * handle = (JSON_MSG_HDL_OBJECT *)arg;
+    CLT_MSG_CB_PARAM  cb_param;
+    JSON_MSG_CLT_OBJECT * handle = (JSON_MSG_CLT_OBJECT *)arg;
     if (NULL == handle)
     {
         return -1;
     }
 
-    memset(&cb_param, 0, sizeof(MSG_CB_PARAM));
+    debug_info("called \n");
+
+    memset(&cb_param, 0, sizeof(CLT_MSG_CB_PARAM));
     root = cJSON_Parse(buffer);
     if (NULL == root)
     {
@@ -201,13 +188,13 @@ static int dev_up_msg_register(void * arg, char *buffer, char *resp_buf, int buf
     {
         return -1;
     }
-
-    sub_obj = cJSON_GetObjectItem(root, "cc_uuid");
+    debug_info("called \n");
+    sub_obj = cJSON_GetObjectItem(root, "open_id");
     if (NULL != sub_obj)
     {
-        if (strlen(sub_obj->valuestring) < sizeof(cb_param.cc_uuid))
+        if (strlen(sub_obj->valuestring) < sizeof(cb_param.gopenid))
         {
-            strncpy(cb_param.cc_uuid, sub_obj->valuestring, sizeof(cb_param.cc_uuid));
+            strncpy(cb_param.gopenid, sub_obj->valuestring, sizeof(cb_param.gopenid));
         }
     }
     sub_obj = cJSON_GetObjectItem(root, "req_id");
@@ -215,31 +202,23 @@ static int dev_up_msg_register(void * arg, char *buffer, char *resp_buf, int buf
     {
         cb_param.req_id = sub_obj->valueint;
     }
-
+    debug_info("called \n");
     cJSON * attr_obj = cJSON_GetObjectItem(root, "attr");
     if (NULL == attr_obj)
     {
         debug_error("can't find attr \n");
         return -1;
     }
-
+    debug_info("called \n");
     cJSON * cmd_obj = cJSON_GetObjectItem(attr_obj, "cmd");
     if (NULL != cmd_obj)
     {
-        if (0 == strcmp(cmd_obj->valuestring, "register"))
+        if (0 == strcmp(cmd_obj->valuestring, "get_param"))
         {
-            cb_param.e_msg = E_DEV_REGISTER;
+            cb_param.e_msg = E_DEV_GET_PARAM;
         }
     }
-    cJSON * ver_obj = cJSON_GetObjectItem(attr_obj, "version");
-    if (NULL != ver_obj)
-    {
-        if (strlen(ver_obj->valuestring) < sizeof(cb_param.str_arg))
-        {
-            strncpy(cb_param.str_arg[0], ver_obj->valuestring, sizeof(cb_param.str_arg[0]));
-        }
-    }
-
+    debug_info("called \n");
     cb_param.req_id = sub_obj->valueint;
     if (NULL != handle->cb)
     {
@@ -254,209 +233,20 @@ static int dev_up_msg_register(void * arg, char *buffer, char *resp_buf, int buf
 #if 0
 {
 "method":"up_msg",
-"cc_uuid":"10001122334455",
-"req_id":123456789,
-"attr":
+"open_id":"XXXXXX",
+		"dev_uuid":"02001122334455",
+		"req_id":123456789,
+		"attr":
 {
-    "cmd":"heart_beat",
-}
-}
-#endif
-static int dev_up_msg_register_heart_beat(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
-{
-    int ret = -1;
-    cJSON *root = NULL;
-    cJSON *sub_obj = NULL;
-    MSG_CB_PARAM  cb_param;
-    JSON_MSG_HDL_OBJECT * handle = (JSON_MSG_HDL_OBJECT *)arg;
-    if (NULL == handle)
-    {
-        return -1;
-    }
-
-    memset(&cb_param, 0, sizeof(MSG_CB_PARAM));
-    root = cJSON_Parse(buffer);
-    if (NULL == root)
-    {
-        debug_print("cJSON_Parse error!\n");
-        return -1;
-    }
-
-    sub_obj = cJSON_GetObjectItem(root, "method");
-    if (NULL != sub_obj)
-    {
-        if (0 != strcmp(sub_obj->valuestring, "up_msg"))
-        {
-            return -1;
-        }
-    }
-    else
-    {
-        return -1;
-    }
-
-    sub_obj = cJSON_GetObjectItem(root, "cc_uuid");
-    if (NULL != sub_obj)
-    {
-        if (strlen(sub_obj->valuestring) < sizeof(cb_param.cc_uuid))
-        {
-            strncpy(cb_param.cc_uuid, sub_obj->valuestring, sizeof(cb_param.cc_uuid));
-        }
-    }
-    sub_obj = cJSON_GetObjectItem(root, "req_id");
-    if (NULL != sub_obj)
-    {
-        cb_param.req_id = sub_obj->valueint;
-    }
-
-    cJSON * attr_obj = cJSON_GetObjectItem(root, "attr");
-    if (NULL == attr_obj)
-    {
-        debug_error("can't find attr \n");
-        return -1;
-    }
-
-    cJSON * cmd_obj = cJSON_GetObjectItem(attr_obj, "cmd");
-    if (NULL != cmd_obj)
-    {
-        if (0 == strcmp(cmd_obj->valuestring, "heart_beat"))
-        {
-            cb_param.e_msg = E_DEV_HEART_BEAT;
-        }
-    }
-
-    cb_param.req_id = sub_obj->valueint;
-    if (NULL != handle->cb)
-    {
-        handle->cb(handle->arg, &cb_param, ext_arg);
-        ret = 0;
-    }
-    cJSON_Delete(root);
-
-    return ret;
-}
-
-#if 0
-{
-"method":"report_msg",
-"cc_uuid":"10001122334455",
-"dev1":
-{
-"dev_uuid":"02001122334455",
-"online":"yes",
-"switch":"off"
-},
-"dev2":{
-"dev_uuid":"02001122334456",
-"online":"no",
-"switch":"off"
-},
-"dev3":
-{
-"dev_uuid":"02001122334457",
-"online":"yes",
-"switch":"on"
-},
-"dev4":
-{
-"dev_uuid":"02001122334458",
-"online":"yes",
+"cmd":"set_switch",
+"dev_uuid":"02001122334455", /* 为子设备的uuid */
 "switch":"on"
 }
 }
+
 #endif
-static int dev_up_msg_update_status(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
+static int clt_up_msg_set_switch(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
 {
-    int ret = -1;
-    cJSON *root = NULL;
-    cJSON *sub_obj = NULL;
-    MSG_CB_PARAM  cb_param;
-    JSON_MSG_HDL_OBJECT * handle = (JSON_MSG_HDL_OBJECT *)arg;
-    if (NULL == handle)
-    {
-        return -1;
-    }
-
-    memset(&cb_param, 0, sizeof(MSG_CB_PARAM));
-    root = cJSON_Parse(buffer);
-    if (NULL == root)
-    {
-        debug_print("cJSON_Parse error!\n");
-        return -1;
-    }
-
-    sub_obj = cJSON_GetObjectItem(root, "method");
-    if (NULL != sub_obj)
-    {
-        if (0 != strcmp(sub_obj->valuestring, "report_msg"))
-        {
-            return -1;
-        }
-        cb_param.e_msg = E_DEV_INFORM_STATUS;
-    }
-    else
-    {
-        return -1;
-    }
-
-    sub_obj = cJSON_GetObjectItem(root, "cc_uuid");
-    if (NULL != sub_obj)
-    {
-        if (strlen(sub_obj->valuestring) < sizeof(cb_param.cc_uuid))
-        {
-            strncpy(cb_param.cc_uuid, sub_obj->valuestring, sizeof(cb_param.cc_uuid));
-        }
-    }
-
-    int i;
-    for (i=0; i<4; i++)
-    {
-        char dev_buf[8];
-        memset(dev_buf, 0, sizeof(dev_buf));
-        snprintf(dev_buf, sizeof(dev_buf), "dev%d", i+1);
-
-        cJSON * dev_obj = cJSON_GetObjectItem(root, dev_buf);
-        if (NULL == dev_obj)
-        {
-            debug_error("can't find dev_obj \n");
-            return -1;
-        }
-        cJSON * du_obj = cJSON_GetObjectItem(dev_obj, "dev_uuid");
-        if (NULL != du_obj)
-        {
-            if (strlen(du_obj->valuestring) < sizeof(cb_param.str_arg[i]))
-            {
-                strncpy(cb_param.str_arg[i], du_obj->valuestring, sizeof(cb_param.str_arg[i]));
-            }
-        }
-        cJSON * ol_obj = cJSON_GetObjectItem(dev_obj, "online");
-        if (NULL != ol_obj)
-        {
-            int is_online = 0;
-            if (0 == strcmp(ol_obj->valuestring, "yes"))
-            {
-                is_online = 1;
-            }
-            cb_param.int_arg1[i] = is_online;
-        }
-        cJSON * sw_obj = cJSON_GetObjectItem(dev_obj, "switch");
-        if (NULL != sw_obj)
-        {
-            int on_off = 0;
-            if (0 == strcmp(sw_obj->valuestring, "on"))
-            {
-                on_off = 1;
-            }
-            cb_param.int_arg2[i] = on_off;
-        }
-    }
-
-    if (NULL != handle->cb)
-    {
-        handle->cb(handle->arg, &cb_param, ext_arg);
-        ret = 0;
-    }
-    cJSON_Delete(root);
-
-    return ret;
+    debug_info("uncompleted \n");
+    return 0;
 }

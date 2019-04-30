@@ -13,23 +13,33 @@
 #include <crypto/int_lib.h>
 
 
-#include "msg_handle/json_msg_handle.h"
-#include "dev_param.h"
+#include "msg_handle/json_msg_clt.h"
+#include "clt_param.h"
 #include "hash_value.h"
+#include "ws.h"
 #include "clt_mgr.h"
 
 #define MAX_MSG_LEN     1024
 #define MAX_EVENTS      256     /* 实际作用不大 */
 #define MAXSOCKET       MAX_EVENTS
 
+#define WSS_RESP "HTTP/1.1 101 Switching Protocols\r\n\
+Upgrade: websocket\r\n\
+Sec-WebSocket-Version: 13\r\n\
+Connection: Upgrade\r\n\
+Server: workerman/3.3.6\r\n\
+Sec-WebSocket-Accept: "
+
 typedef struct _CLT_MGR_OBJECT
 {
     int sock_fd;
     int epoll_fd;
 
-    DEV_PARAM_HANDLE hdev_param;
+    CLT_PARAM_HANDLE hclt_param;
 
-    JMH_HANDLE       h_jmh;
+    JMC_HANDLE       h_jmc;
+
+    WS_HANDLE        ws_handle;
 
     RTHREAD_HANDLE   rthread_center;
     TTASK_HANDLE     ttask_center;
@@ -42,19 +52,25 @@ typedef struct _CLT_MGR_OBJECT
 static CLT_MGR_OBJECT * instance(void);
 static void clt_thread_center(long user_info);
 static void clt_flush_center(long user_info);
-static int json_msg_fn(void * arg, MSG_CB_PARAM * cb_param, void * ext_arg);
+static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg);
 static void sock_exit_fn(void * arg, int sock_fd);
 
 CLT_MGR_HANDLE clt_mgr_create(void)
 {
-    CLT_MGR_OBJECT *handle = instance();
+    CLT_MGR_OBJECT * handle = instance();
     if (NULL == handle)
     {
         debug_error("not enough memory \n");
         return NULL;
     }
 
-    // for device communication.
+    handle->ws_handle = ws_create();
+    if (NULL == handle->ws_handle)
+    {
+        debug_error("ws_create create failed \n");
+        goto create_failed;
+    }
+    // for client communication.
     handle->sock_fd = tcp_open_and_bind(PORT_CLT);
     if (handle->sock_fd <= 0)
     {
@@ -76,21 +92,21 @@ CLT_MGR_HANDLE clt_mgr_create(void)
         goto create_failed;
     }
 
-    handle->hdev_param = dev_param_create(MAX_CLIENTS);
-    if (NULL == handle->hdev_param)
+    handle->hclt_param = clt_param_create(MAX_APP_CLIENTS);
+    if (NULL == handle->hclt_param)
     {
         debug_error("not enough memory \n");
         goto create_failed;
     }
-    dev_param_set_sock_exit_cb(handle->hdev_param, sock_exit_fn, handle);
+    clt_param_set_sock_exit_cb(handle->hclt_param, sock_exit_fn, handle);
 
-    handle->h_jmh = json_msg_handle_create();
-    if (NULL == handle->h_jmh)
+    handle->h_jmc = json_msg_clt_create();
+    if (NULL == handle->h_jmc)
     {
         debug_error("not enough memory \n");
         goto create_failed;
     }
-    json_msg_handle_set_cb(handle->h_jmh, json_msg_fn, handle);
+    json_msg_clt_set_cb(handle->h_jmc, json_msg_fn, handle);
 
     handle->rthread_center = rthread_create();
     if (NULL == handle->rthread_center)
@@ -140,6 +156,10 @@ void clt_mgr_destroy(CLT_MGR_HANDLE handle)
     {
         return;
     }
+    if (NULL != handle->ws_handle)
+    {
+        ws_destroy(handle->ws_handle);
+    }
     if (handle->epoll_fd > 0)
     {
         close(handle->epoll_fd);
@@ -163,13 +183,13 @@ void clt_mgr_destroy(CLT_MGR_HANDLE handle)
         handle->ttask_flush_center = NULL;
     }
 
-    if (NULL != handle->hdev_param)
+    if (NULL != handle->hclt_param)
     {
-        dev_param_destroy(handle->hdev_param);
+        clt_param_destroy(handle->hclt_param);
     }
-    if (NULL != handle->h_jmh)
+    if (NULL != handle->h_jmc)
     {
-        json_msg_handle_destroy(handle->h_jmh);
+        json_msg_clt_destroy(handle->h_jmc);
     }
 
     free(handle);
@@ -178,7 +198,7 @@ void clt_mgr_destroy(CLT_MGR_HANDLE handle)
 static void clt_thread_center(long param)
 {
     char peer_ip[16];
-    char resp_buf[256];
+    char resp_buf[512];
 
     unsigned short peer_port;
     char   recv_buf[MAX_MSG_LEN];
@@ -242,7 +262,7 @@ static void clt_thread_center(long param)
                 // 设置客户端socket非阻塞
                 tcp_set_nonblock(new_fd);
 
-                dev_param_add_connect_sock(handle->hdev_param, new_fd);
+                //clt_param_add_connect_sock(handle->hclt_param, new_fd);
 
                 //将客户端socket加入到epoll池中
                 struct epoll_event client_ev;
@@ -262,6 +282,7 @@ static void clt_thread_center(long param)
             {
                 // 表示服务器这边的client_st接收到消息
                 memset(recv_buf, 0, sizeof(recv_buf));
+
                 int recv_len = tcp_recv(events[i].data.fd, recv_buf, sizeof(recv_buf));
                 if (recv_len <= 0)
                 {
@@ -278,10 +299,34 @@ static void clt_thread_center(long param)
                 else
                 {
                     /* 处理消息 */
-                    debug_info("recv client msg %s \n", recv_buf);
+                    debug_info("new app msg len %d \n", recv_len);
 
+                    if (0 == clt_param_sock_fd_is_exist(handle->hclt_param, events[i].data.fd))
+                    {
+                        char * accept_key = ws_calculate_accept_key(handle->ws_handle, recv_buf);
+                        if (NULL != accept_key)
+                        {
+                            debug_info("get accept_key [%s] \n", accept_key);
+                            char send_buf[512] = {0};
+                            strcat(send_buf, WSS_RESP);
+                            strcat(send_buf, accept_key);
+                            strcat(send_buf, "\r\n\r\n");
+                            tcp_send(events[i].data.fd, send_buf, strlen(send_buf));
 
+                            debug_info("new client in, send response: %s \n", send_buf);
 
+                            clt_param_add_connect_sock(handle->hclt_param, events[i].data.fd);
+                        }
+                    }
+                    else
+                    {
+                        char * payload_data = ws_handle_payload_data(handle->ws_handle, recv_buf, strlen(recv_buf));
+                        debug_info("=== %s \n",  payload_data);
+                        if (NULL != payload_data)
+                        {
+                            json_msg_clt_msg(handle->h_jmc, payload_data, strlen(payload_data), resp_buf, sizeof(resp_buf), &(events[i].data.fd));
+                        }
+                    }
 
                 }
                 /*
@@ -323,8 +368,8 @@ static void clt_flush_center(long param)
     }
     while(1)
     {
-        dev_param_sock_fd_flush(handle->hdev_param);
-        dev_param_flush(handle->hdev_param);
+        clt_param_sock_fd_flush(handle->hclt_param);
+        clt_param_flush(handle->hclt_param);
         sleep(3);
     }
 }
@@ -344,38 +389,58 @@ static CLT_MGR_OBJECT * instance(void)
     return handle;
 }
 
-static int json_msg_fn(void * arg, MSG_CB_PARAM * cb_param, void * ext_arg)
+static char * test_get_param_str = "{\
+\"method\":\"down_msg\",\
+\"dev_uuid\":\"02001122334455\",\
+\"req_id\":123456789,\
+\"code\":0,\
+\"attr\":\
+{\
+\"dev1\": \
+{ \
+\"dev_uuid\":\"02001122334455\", \
+\"switch\":\"on\"\
+},\
+\"dev2\": \
+{ \
+\"dev_uuid\":\"02001122334455\",\
+\"switch\":\"on\"\
+},\
+\"dev3\": \
+{\
+\"dev_uuid\":\"02001122334455\",\
+\"switch\":\"on\"\
+},\
+\"dev4\":\
+{\
+\"dev_uuid\":\"02001122334455\",\
+\"switch\":\"on\"\
+},\
+}\
+}";
+
+
+static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
 {
     CLT_MGR_OBJECT *handle = (CLT_MGR_OBJECT *)arg;
 
     UNUSED_VALUE(handle);
-    debug_info("json callback called cmd 0x%x cc_id %s\n", cb_param->e_msg, cb_param->cc_uuid);
+    debug_info("json callback called cmd 0x%x app_id %s\n", cb_param->e_msg, cb_param->gopenid);
     switch(cb_param->e_msg)
     {
-        case E_DEV_REGISTER:
+        case E_DEV_GET_PARAM:
         {
             int sock_fd = *(int *)ext_arg;
-            int hash_value = (int)string_to_hash(cb_param->cc_uuid);
-            dev_param_register(handle->hdev_param, cb_param->cc_uuid, hash_value, sock_fd);
-            break;
-        }
-        case E_DEV_HEART_BEAT:
-        {
-            dev_heart_beat(handle->hdev_param, cb_param->cc_uuid);
-            break;
-        }
-        case E_DEV_INFORM_STATUS:
-        {
-            int i;
-            SUB_DEV_NODE sub_dev;
-            memset(&sub_dev, 0, sizeof(SUB_DEV_NODE));
-            for (i=0; i<MAX_ID_ARRAY; i++)
-            {
-                strncpy(sub_dev.id[i],  cb_param->str_arg[i], sizeof(sub_dev.id[i]));
-                sub_dev.on_line[i] = cb_param->int_arg1[i];
-                sub_dev.on_off[i]  = cb_param->int_arg2[i];
-            }
-            dev_param_update(handle->hdev_param, cb_param->cc_uuid, &sub_dev);
+
+            //int hash_value = (int)string_to_hash(cb_param->cc_uuid);
+            //dev_param_register(handle->hclt_param, cb_param->cc_uuid, hash_value, sock_fd);
+
+            unsigned long len = 0;
+
+            char * send_test = ws_construct_packet_data(handle->ws_handle, test_get_param_str, &len);
+            debug_info("start send len %ld \n", len);
+            tcp_send(sock_fd, send_test, len);
+
             break;
         }
         default:

@@ -13,17 +13,15 @@ typedef struct _APP_DEVICE
 {
     int      sock_fd;
     struct   list_head list;
-    char     open_id[MAX_OPEN_ID_LEN];  /* 中控的ID号 */
-    char     cc_uuid[MAX_CC_ID_LEN];
-
+    char     open_id[MAX_OPEN_ID_LEN];
     unsigned int hash_value;
     unsigned int next_sec;
 } APP_DEVICE;
 
 typedef struct _SOCK_FD_NODE
 {
-    struct   list_head list;
     int      sock_fd;
+    struct   list_head list;
     unsigned int next_sec;
 } SOCK_FD_NODE;
 
@@ -64,7 +62,7 @@ static long g_lCryptTable[] =
 /************************************************************************************************************************/
 static unsigned int to_hash (void* pstring);
 static int keys_equal_func (void *pkey1, void *pkey2);
-static GW_DEVICE *get_device_by_id(CLT_PARAM_HANDLE handle, char *id);
+static APP_DEVICE *get_device_by_id(CLT_PARAM_HANDLE handle, char *id);
 
 /************************************************************************************************************************/
 /*			Internal Visiable Constant Definition																		*/
@@ -94,7 +92,8 @@ CLT_PARAM_HANDLE clt_param_create(int max_clt_count)
         goto create_failed;
     }
 
-    // id_mgr_add_device(handle->hid_mgr, "10001122334455");
+    //id_mgr_add_device(handle->hid_mgr, "10001122334455");
+    id_mgr_add_group_openid(handle->hid_mgr, "10001122334455", "ogDt75W7bJt-DTubZvPFrQCZ8Y58");
 
     handle->hclient = create_hashtable(max_clt_count, to_hash, keys_equal_func);
 
@@ -118,9 +117,27 @@ void clt_param_set_sock_exit_cb(CLT_PARAM_HANDLE handle, sock_exit_callback cb, 
     }
 }
 
-void clt_param_get_proxy_server_addr(CLT_PARAM_HANDLE handle, char *ip, int len)
+int clt_param_sock_fd_is_exist(CLT_PARAM_HANDLE handle, int sock_fd)
 {
-    strncpy(ip, (char *)PROXY_SERVER_IP, len);
+    int ret = 0;
+    SOCK_FD_NODE * sock_node = NULL;
+    struct list_head *pos = NULL;
+    struct list_head *n   = NULL;
+
+    list_for_each_safe(pos, n, &handle->sock_fd_head)
+    {
+        sock_node = list_entry(pos, SOCK_FD_NODE, list);
+        if (NULL != sock_node)
+        {
+            if (sock_fd == sock_node->sock_fd)
+            {
+                ret = 1;
+                break;
+            }
+        }
+    }
+
+    return ret;
 }
 
 int clt_param_add_connect_sock(CLT_PARAM_HANDLE handle, int sock_fd)
@@ -129,6 +146,12 @@ int clt_param_add_connect_sock(CLT_PARAM_HANDLE handle, int sock_fd)
     {
         debug_error("invalid param \n");
         return -1;
+    }
+
+    if (1 == clt_param_sock_fd_is_exist(handle, sock_fd))
+    {
+        debug_info("sock_fd_is_exist already \n");
+        return 0;
     }
 
     SOCK_FD_NODE * sock_node = NULL;
@@ -150,216 +173,91 @@ int clt_param_add_connect_sock(CLT_PARAM_HANDLE handle, int sock_fd)
     return 0;
 }
 
-int clt_param_get_param_by_openid(CLT_PARAM_HANDLE handle, char * open_id)
+int clt_param_get_dev_uuid_by_openid(CLT_PARAM_HANDLE handle, char * openid, char * buf, int buf_len)
 {
-    int should_rebuild = 0;
-    if ((strlen(cc_id) > MAX_ID_LEN) || (0 == strlen(cc_id)))
-    {
-        debug_print("id length %d invalid \n", (int)strlen(cc_id));
-        return -1;
-    }
-
-    if (0 == id_mgr_id_is_exist(handle->hid_mgr, cc_id))
-    {
-        debug_print("invalid cc_id [%s][register] \n", cc_id);
-        return -1;
-    }
-
-    GW_DEVICE *gw_dev = get_device_by_id(handle, cc_id);
-
-    if ((NULL == gw_dev) || ((NULL != gw_dev) && (gw_dev->hash_value != hash_value)))
-    {
-        should_rebuild = 1;
-    }
-    if ((NULL != gw_dev) && (gw_dev->hash_value != hash_value))
-    {
-        debug_print("re-register id %s \n", cc_id);
-        pthread_mutex_lock(&handle->mutex);
-        list_del(&gw_dev->list);
-        hashtable_remove(handle->hclient, gw_dev->cc_id);
-        free(gw_dev);
-        pthread_mutex_unlock(&handle->mutex);
-    }
-
-    if (1 == should_rebuild)
-    {
-        GW_DEVICE* gw_dev_tmp = NULL;
-
-	    gw_dev_tmp = (GW_DEVICE *)calloc(1, sizeof(GW_DEVICE));
-        if (NULL == gw_dev_tmp)
-        {
-            debug_print("not enough memory \n");
-            return -1;
-        }
-        strncpy(gw_dev_tmp->cc_id, cc_id, (int)sizeof(gw_dev_tmp->cc_id));
-
-        gw_dev_tmp->sock_fd    = sock_fd;
-        gw_dev_tmp->hash_value = hash_value;
-        gw_dev_tmp->next_sec   = get_real_time_sec() + TCP_TIMEOUT;
-
-        pthread_mutex_lock(&handle->mutex);
-
-        /* 将sock_fd从sock_fd_head中删除 */
-        SOCK_FD_NODE * sock_node = NULL;
-        struct list_head *pos = NULL;
-        struct list_head *n   = NULL;
-        list_for_each_safe(pos, n, &handle->sock_fd_head)
-        {
-            sock_node = list_entry(pos, SOCK_FD_NODE, list);
-            if (NULL != sock_node)
-            {
-                if (sock_fd == sock_node->sock_fd)
-                {
-                    debug_info("free sock_fd %d \n", sock_fd);
-                    list_del(&sock_node->list);
-                    free(sock_node);
-                }
-            }
-        }
-
-        if (!hashtable_insert(handle->hclient, gw_dev_tmp->cc_id, gw_dev_tmp))
-        {
-            debug_print(" hashtable_insert failed \n");
-	        free(gw_dev_tmp);
-	        pthread_mutex_unlock(&handle->mutex);
-	        return -1;
-        }
-        list_add_tail(&gw_dev_tmp->list, &handle->head);
-        pthread_mutex_unlock(&handle->mutex);
-        debug_info("add cc_id %s:%d:%d successful \n", cc_id, hash_value, sock_fd);
-    }
-
-    return 0;
+    return id_mgr_get_uuid_by_group_openid(handle->hid_mgr, openid, buf, buf_len);
 }
 
-int dev_heart_beat(CLT_PARAM_HANDLE handle, char *cc_id)
+int clt_heart_beat(CLT_PARAM_HANDLE handle, char *gopenid)
 {
-    if ((strlen(cc_id) > MAX_ID_LEN) || (0 == strlen(cc_id)))
+    if (0 == strlen(gopenid))
     {
-        debug_print("id length %d invalid \n", (int)strlen(cc_id));
+        debug_print("id length %d invalid \n", (int)strlen(gopenid));
         return -1;
     }
 
-    if (0 == id_mgr_id_is_exist(handle->hid_mgr, cc_id))
+    if (0 == id_mgr_group_openid_is_exist(handle->hid_mgr, gopenid))
     {
-        debug_print("invalid cc_id [%s][register] \n", cc_id);
+        debug_print("invalid gopenid [%s][register] \n", gopenid);
         return -1;
     }
 
-    GW_DEVICE *gw_dev = get_device_by_id(handle, cc_id);
-    if (NULL != gw_dev)
+    APP_DEVICE * app_dev = get_device_by_id(handle, gopenid);
+    if (NULL != app_dev)
     {
         pthread_mutex_lock(&handle->mutex);
-        gw_dev->next_sec   = get_real_time_sec() + TCP_TIMEOUT; // 120 secs.
+        app_dev->next_sec   = get_real_time_sec() + TCP_TIMEOUT; // 120 secs.
         pthread_mutex_unlock(&handle->mutex);
 
-        debug_info("cc %s heart_beat \n", cc_id);
+        debug_info("app_openid %s heart_beat \n", gopenid);
     }
     else
     {
-        debug_info("cc_id:%s unexist \n", cc_id);
+        debug_info("app_openid:%s unexist \n", gopenid);
         return -1;
     }
 
     return 0;
 }
 
-int clt_param_update(CLT_PARAM_HANDLE handle, char *cc_id, SUB_DEV_NODE * sub_dev)
+int clt_param_group_openid_is_valid(CLT_PARAM_HANDLE handle, char *gopenid)
 {
-    if ((strlen(cc_id) > MAX_ID_LEN) || (0 == strlen(cc_id)) || (NULL == sub_dev))
+    int ret = 0;
+
+    if (0 == id_mgr_group_openid_is_exist(handle->hid_mgr, gopenid))
     {
-        debug_print("id length %d invalid \n", (int)strlen(cc_id));
+        debug_print("invalid id [%s][client visit] \n", gopenid);
         return -1;
     }
 
-    if (0 == id_mgr_id_is_exist(handle->hid_mgr, cc_id))
+    APP_DEVICE *app_dev = get_device_by_id(handle, gopenid);
+    if (NULL != app_dev)
     {
-        debug_print("invalid cc_id [%s][register] \n", cc_id);
-        return -1;
-    }
-
-    GW_DEVICE *gw_dev = get_device_by_id(handle, cc_id);
-    if (NULL != gw_dev)
-    {
-        int i;
-        pthread_mutex_lock(&handle->mutex);
-        for(i=0; i<MAX_ID_ARRAY; i++)
-        {
-            strncpy(gw_dev->sub_dev.id[i], sub_dev->id[i], (int)sizeof(gw_dev->sub_dev.id[i]));
-            gw_dev->sub_dev.on_off[i]  = sub_dev->on_off[i];
-            gw_dev->sub_dev.on_line[i] = sub_dev->on_line[i];
-        }
-        gw_dev->next_sec   = get_real_time_sec() + TCP_TIMEOUT; // 120 secs.
-        pthread_mutex_unlock(&handle->mutex);
-
-        debug_info("cc %s updated \n", cc_id);
-    }
-    else
-    {
-        debug_info("cc_id:%s unexist \n", cc_id);
-        return -1;
-    }
-
-    return 0;
-}
-
-int clt_param_id_is_valid(CLT_PARAM_HANDLE handle, char *cc_id)
-{
-    int ret = -1;
-
-    if (!id_mgr_id_is_exist(handle->hid_mgr, cc_id))
-    {
-        debug_print("invalid id [%s][client visit] \n", cc_id);
-        return FALSE;
-    }
-
-    GW_DEVICE *gw_dev = get_device_by_id(handle, cc_id);
-    if (NULL != gw_dev)
-    {
-        ret = 0;
+        ret = 1;
     }
 
     return ret;
 }
 
-void clt_param_keep_alive(CLT_PARAM_HANDLE handle, char *cc_id)
-{
-    GW_DEVICE * gw_dev = get_device_by_id(handle, cc_id);
-    if (NULL != gw_dev)
-    {
-        gw_dev->next_sec = get_real_time_sec() + TCP_TIMEOUT;
-    }
-}
-
 void clt_param_flush(CLT_PARAM_HANDLE handle)
 {
-    GW_DEVICE* gw_dev_list = NULL;
+    APP_DEVICE* app_dev_list = NULL;
     struct list_head *pos = NULL;
     struct list_head *n   = NULL;
 
     list_for_each_safe(pos, n, &handle->head)
     {
-        gw_dev_list = list_entry(pos, GW_DEVICE, list);
-        if (NULL != gw_dev_list)
+        app_dev_list = list_entry(pos, APP_DEVICE, list);
+        if (NULL != app_dev_list)
         {
-            if (get_real_time_sec() >= (int)gw_dev_list->next_sec)
+            if (get_real_time_sec() >= (int)app_dev_list->next_sec)
             {
-                debug_info("cc  %s exit \n", gw_dev_list->cc_id);
+                debug_info("gopenid  %s exit \n", app_dev_list->open_id);
                 pthread_mutex_lock(&handle->mutex);
 
-                tcp_close(gw_dev_list->sock_fd);
+                tcp_close(app_dev_list->sock_fd);
 
                 if (NULL != handle->cb)
                 {
-                    handle->cb(handle->arg, gw_dev_list->sock_fd);
+                    handle->cb(handle->arg, app_dev_list->sock_fd);
                 }
 
                 // 接收数据出错或者客户端已经关闭
-                gw_dev_list->sock_fd = -1;
+                app_dev_list->sock_fd = -1;
 
-                list_del(&gw_dev_list->list);
-                hashtable_remove(handle->hclient, gw_dev_list->cc_id);
-                free(gw_dev_list);
+                list_del(&app_dev_list->list);
+                hashtable_remove(handle->hclient, app_dev_list->open_id);
+                free(app_dev_list);
                 pthread_mutex_unlock(&handle->mutex);
             }
         }
@@ -392,33 +290,33 @@ void clt_param_sock_fd_flush(CLT_PARAM_HANDLE handle)
     }
 }
 
-int clt_param_remove(CLT_PARAM_HANDLE handle, char *cc_id)
+int clt_param_remove(CLT_PARAM_HANDLE handle, char *gopenid)
 {
     int ret   = -1;
     struct list_head   *pos = NULL;
     struct list_head   *n   = NULL;
-    GW_DEVICE* gw_dev_list = NULL;
-    GW_DEVICE* gw_dev_tmp = NULL;
-	gw_dev_tmp = (GW_DEVICE * )hashtable_search(handle->hclient, cc_id);
-	if (NULL == gw_dev_tmp)
+    APP_DEVICE * app_dev_list = NULL;
+    APP_DEVICE * app_dev_tmp = NULL;
+	app_dev_tmp = (APP_DEVICE * )hashtable_search(handle->hclient, gopenid);
+	if (NULL == app_dev_tmp)
 	{
 		return -1;
 	}
 
     list_for_each_safe(pos, n, &handle->head)
     {
-        gw_dev_list = list_entry(pos, GW_DEVICE, list);
-        if (NULL != gw_dev_list)
+        app_dev_list = list_entry(pos, APP_DEVICE, list);
+        if (NULL != app_dev_list)
         {
             pthread_mutex_lock(&handle->mutex);
-            list_del(&gw_dev_list->list);
-            free(gw_dev_list);
+            list_del(&app_dev_list->list);
+            free(app_dev_list);
             pthread_mutex_unlock(&handle->mutex);
             break;
         }
     }
 
-	if (0 == hashtable_remove(handle->hclient, cc_id))
+	if (0 == hashtable_remove(handle->hclient, gopenid))
 	{
 		ret = 0;
 	}
@@ -431,10 +329,10 @@ int clt_param_get_count(CLT_PARAM_HANDLE handle)
 	return (int)hashtable_count(handle->hclient);
 }
 
-int clt_param_get_sock_fd(CLT_PARAM_HANDLE handle, char *cc_id, int *sock_fd)
+int clt_param_get_sock_fd(CLT_PARAM_HANDLE handle, char *gopenid, int *sock_fd)
 {
     int ret = -1;
-    GW_DEVICE *client = (GW_DEVICE *)hashtable_search(handle->hclient, cc_id);
+    APP_DEVICE *client = (APP_DEVICE *)hashtable_search(handle->hclient, gopenid);
     if (NULL != client)
     {
         *sock_fd = client->sock_fd;
@@ -444,40 +342,9 @@ int clt_param_get_sock_fd(CLT_PARAM_HANDLE handle, char *cc_id, int *sock_fd)
 	return ret;
 }
 
-void clt_param_dump(CLT_PARAM_HANDLE handle)
-{
-    int   count;
-    char  buffer[64];
-    char  commom_time[32];
-    char  ymd_buf[16];
-    char  filename[32];
-
-    count = (int)hashtable_count(handle->hclient);
-
-    debug_print("device info: \n");
-    debug_print("total [%d] device registered \n", count);
-
-    memset(filename, 0, sizeof(filename));
-    memset(ymd_buf, 0, sizeof(ymd_buf));
-    // get_time_ymd(ymd_buf);
-    sprintf(filename, "%s.log", ymd_buf);
-
-    FILE *fp = fopen(filename, "a+");
-    memset(buffer, 0, sizeof(buffer));
-    memset(commom_time, 0, sizeof(commom_time));
-    get_common_time(commom_time);
-    sprintf(buffer, "%s - count:[%d]\r\n", commom_time, count );
-
-    if (NULL != fp)
-    {
-        fwrite(buffer, 1, strlen(buffer), fp);
-        fclose(fp);
-    }
-}
-
 void clt_param_destroy(CLT_PARAM_HANDLE handle)
 {
-    GW_DEVICE* gw_dev_list = NULL;
+    APP_DEVICE* app_dev_list = NULL;
 
     SOCK_FD_NODE * sock_node = NULL;
 
@@ -489,11 +356,11 @@ void clt_param_destroy(CLT_PARAM_HANDLE handle)
     }
     list_for_each_safe(pos, n, &handle->head)
     {
-        gw_dev_list = list_entry(pos, GW_DEVICE, list);
-        if (NULL != gw_dev_list)
+        app_dev_list = list_entry(pos, APP_DEVICE, list);
+        if (NULL != app_dev_list)
         {
-            list_del(&gw_dev_list->list);
-            free(gw_dev_list);
+            list_del(&app_dev_list->list);
+            free(app_dev_list);
         }
     }
     list_del(&handle->head);
@@ -523,9 +390,9 @@ void clt_param_destroy(CLT_PARAM_HANDLE handle)
 /*******************************************************************************/
 /*			Private Function Definition										   */
 /*******************************************************************************/
-static GW_DEVICE *get_device_by_id(CLT_PARAM_HANDLE handle, char *cc_id)
+static APP_DEVICE *get_device_by_id(CLT_PARAM_HANDLE handle, char *cc_id)
 {
-	return (GW_DEVICE*)hashtable_search(handle->hclient, cc_id);
+	return (APP_DEVICE*)hashtable_search(handle->hclient, cc_id);
 }
 
 static unsigned int to_hash(void* pstring)
@@ -555,14 +422,4 @@ static unsigned int to_hash(void* pstring)
 static int keys_equal_func(void *pkey1, void *pkey2)
 {
     return 1;
-#if 0
-	if (strcmp((char*)pkey1, (char*)pkey2) == 0)
-    {
-		return 1;
-	}
-	else
-    {
-		return 0;
-	}
-#endif
 }

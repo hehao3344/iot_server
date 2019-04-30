@@ -11,9 +11,8 @@ extern "C" {
 
 typedef struct _CLT_MGR_OBJECT * CLT_MGR_HANDLE;
 
-CLT_MGR_HANDLE dev_mgr_create(void);
-void           dev_mgr_destroy(CLT_MGR_HANDLE handle);
-void           dev_mgr_unit_test(void);
+CLT_MGR_HANDLE clt_mgr_create(void);
+void           clt_mgr_destroy(CLT_MGR_HANDLE handle);
 
 #ifdef __cplusplus
 }
