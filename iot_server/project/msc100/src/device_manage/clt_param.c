@@ -6,7 +6,6 @@
 #include "db/id_mgr.h"
 #include "clt_param.h"
 
-
 #define TCP_TIMEOUT     20
 
 typedef struct _APP_DEVICE
@@ -28,7 +27,7 @@ typedef struct _SOCK_FD_NODE
 typedef struct _CLT_PARAM_OBJECT
 {
     struct  list_head head;         // GW_DEVICE head;
-    struct  list_head sock_fd_head; // accept进来但是还未注册的sock_fd
+    struct  list_head sock_fd_head; // accept进来但是还未发送心跳的sock_fd
 
     sock_exit_callback cb;
     void * arg;
@@ -63,6 +62,7 @@ static long g_lCryptTable[] =
 static unsigned int to_hash (void* pstring);
 static int keys_equal_func (void *pkey1, void *pkey2);
 static APP_DEVICE *get_device_by_id(CLT_PARAM_HANDLE handle, char *id);
+static int add_device(CLT_PARAM_HANDLE handle, char *gopenid, int sock_fd);
 
 /************************************************************************************************************************/
 /*			Internal Visiable Constant Definition																		*/
@@ -178,7 +178,7 @@ int clt_param_get_dev_uuid_by_openid(CLT_PARAM_HANDLE handle, char * openid, cha
     return id_mgr_get_uuid_by_group_openid(handle->hid_mgr, openid, buf, buf_len);
 }
 
-int clt_heart_beat(CLT_PARAM_HANDLE handle, char *gopenid)
+int clt_param_heart_beat(CLT_PARAM_HANDLE handle, char *gopenid, int sock_fd)
 {
     if (0 == strlen(gopenid))
     {
@@ -197,14 +197,19 @@ int clt_heart_beat(CLT_PARAM_HANDLE handle, char *gopenid)
     {
         pthread_mutex_lock(&handle->mutex);
         app_dev->next_sec   = get_real_time_sec() + TCP_TIMEOUT; // 120 secs.
+
         pthread_mutex_unlock(&handle->mutex);
 
-        debug_info("app_openid %s heart_beat \n", gopenid);
+        debug_info("app_openid %s heart_beat next ==> %d\n", gopenid, app_dev->next_sec);
     }
     else
     {
         debug_info("app_openid:%s unexist \n", gopenid);
-        return -1;
+        if (0 != add_device(handle, gopenid, sock_fd))
+        {
+            debug_error("add gopenid %s sock %d failed \n", gopenid, sock_fd);
+            return -1;
+        }
     }
 
     return 0;
@@ -242,7 +247,7 @@ void clt_param_flush(CLT_PARAM_HANDLE handle)
         {
             if (get_real_time_sec() >= (int)app_dev_list->next_sec)
             {
-                debug_info("gopenid  %s exit \n", app_dev_list->open_id);
+                debug_info("gopenid  %s exit %d %d \n", app_dev_list->open_id, get_real_time_sec(), (int)app_dev_list->next_sec);
                 pthread_mutex_lock(&handle->mutex);
 
                 tcp_close(app_dev_list->sock_fd);
@@ -390,6 +395,38 @@ void clt_param_destroy(CLT_PARAM_HANDLE handle)
 /*******************************************************************************/
 /*			Private Function Definition										   */
 /*******************************************************************************/
+static int add_device(CLT_PARAM_HANDLE handle, char *gopenid, int sock_fd)
+{
+    APP_DEVICE * app_dev = NULL;
+
+    app_dev = (APP_DEVICE *)calloc(1, sizeof(APP_DEVICE));
+    if (NULL == app_dev)
+    {
+        debug_print("not enough memory \n");
+        return -1;
+    }
+
+    strncpy(app_dev->open_id, gopenid, (int)sizeof(app_dev->open_id));
+
+    app_dev->sock_fd    = sock_fd;
+    app_dev->hash_value = 0;
+    app_dev->next_sec   = get_real_time_sec() + TCP_TIMEOUT;
+    pthread_mutex_lock(&handle->mutex);
+
+    if (!hashtable_insert(handle->hclient, app_dev->open_id, app_dev))
+    {
+        debug_print("hashtable_insert failed \n");
+        free(app_dev);
+        pthread_mutex_unlock(&handle->mutex);
+        return -1;
+    }
+    list_add_tail(&app_dev->list, &handle->head);
+    pthread_mutex_unlock(&handle->mutex);
+    debug_info("add cc_id %s:%d:%d successful \n", gopenid, 0, sock_fd);
+
+    return 0;
+}
+
 static APP_DEVICE *get_device_by_id(CLT_PARAM_HANDLE handle, char *cc_id)
 {
 	return (APP_DEVICE*)hashtable_search(handle->hclient, cc_id);

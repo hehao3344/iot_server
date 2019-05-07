@@ -38,6 +38,7 @@ void dev_param_get_proxy_server_addr(DEV_PARAM_HANDLE handle, char *ip, int len)
 void dev_param_keep_alive(DEV_PARAM_HANDLE handle, char *id);
 void dev_param_flush(DEV_PARAM_HANDLE handle);
 void dev_param_sock_fd_flush(DEV_PARAM_HANDLE handle);
+int  dev_param_get_sub_dev_node(DEV_PARAM_HANDLE handle, char *cc_id, SUB_DEV_NODE * sub_dev_node);
 int  dev_param_remove(DEV_PARAM_HANDLE handle, char *id);
 int  dev_param_get_count(DEV_PARAM_HANDLE handle);
 int  dev_param_get_sock_fd(DEV_PARAM_HANDLE handle, char *id, int *sock_fd);

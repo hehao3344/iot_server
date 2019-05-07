@@ -14,14 +14,12 @@
 
 #include "ws.h"
 
-#define MAX_KEY_HASH_LEN        128
-#define MAX_KEY_HASH_BASE64_LEN 256
-#define PER_LINE_MAX            256		    // client key值最大长度
-#define REQUEST_LEN_MAX         2048	    // request包的最大字节数
-#define SEND_DATA_LEN_MAX       (2048+10)	// 发送数据buffer
-#define WEB_SOCKET_KEY_LEN_MAX  256		    // websocket key值最大长度
-
-#define RESPONSE_HEADER_LEN_MAX 2048	    // response包的最大字节数
+#define MAX_KEY_HASH_LEN            128
+#define MAX_KEY_HASH_BASE64_LEN     256
+#define PER_LINE_MAX                256		                // client key值最大长度
+#define REQUEST_LEN_MAX             1024	                // request包的最大字节数
+#define SEND_DATA_LEN_MAX           (REQUEST_LEN_MAX+10)	// 发送数据buffer
+#define WEB_SOCKET_KEY_LEN_MAX      256		                // websocket key值最大长度
 
 typedef struct _WS_OBJECT
 {
@@ -88,13 +86,14 @@ char * ws_calculate_accept_key(WS_HANDLE handle, const char * buffer)
         debug_error("sha1_data_tmp too long.\n");
         return NULL;
     }
-    memset(handle->sha1_data, 0, n/2);			    // 将sha1_data重置为0
+    memset(handle->sha1_data, 0, sizeof(handle->sha1_data));			    // 将sha1_data重置为0
 
     for (i=0; i<n; i+=2)
     {
         handle->sha1_data[i/2] = htoi(sha1_data_tmp, i, 2); // 将sha1加密后的16进制key值转换为10进制
     }
 
+    memset(handle->sha1_base64_data, 0, sizeof(handle->sha1_base64_data));
     if (0 == base64_encode(handle->sha1_data, n/2, handle->sha1_base64_data, sizeof(handle->sha1_base64_data)))
     {
         ret = handle->sha1_base64_data;
@@ -103,7 +102,194 @@ char * ws_calculate_accept_key(WS_HANDLE handle, const char * buffer)
     return ret;
 }
 
-/* 处理从client接收过来的数据 */
+int ws_decode_data(WS_HANDLE handle, const unsigned char *data, unsigned int data_len, unsigned char *package, unsigned int package_max_len)
+{
+    int count = 0;
+    int ret = -1;
+    unsigned char mask_key[4] = {0};
+    unsigned char temp1, temp2;
+    char mask = 0, type;
+    unsigned int i, len = 0, data_start = 2;
+    if (data_len < 2)
+    {
+        debug_error("data len %d invalid \n", data_len);
+        return WDT_ERR;
+    }
+
+    type = data[0]&0x0F;
+
+    if ((data[0]&0x80) == 0x80)
+    {
+        if (type == 0x01)
+        {
+            ret = WDT_TXTDATA;
+        }
+        else if(type == 0x02)
+        {
+            ret = WDT_BINDATA;
+        }
+        else if(type == 0x08)
+        {
+            ret = WDT_DISCONN;
+        }
+        else if(type == 0x09)
+        {
+            ret = WDT_PING;
+        }
+        else if(type == 0x0A)
+        {
+            ret = WDT_PONG;
+        }
+        else
+        {
+            return WDT_ERR;
+        }
+    }
+    else if (type == 0x00)
+    {
+        ret = WDT_MINDATA;
+    }
+    else
+    {
+        return WDT_ERR;
+    }
+
+    if ((data[1] & 0x80) == 0x80)
+    {
+        mask = 1;
+        count = 4;
+    }
+    else
+    {
+        mask = 0;
+        count = 0;
+    }
+
+    len = data[1] & 0x7F;
+
+    if (len == 126)
+    {
+        if (data_len < 4)
+        {
+            return WDT_ERR;
+        }
+        len = data[2];
+        len = (len << 8) + data[3];
+
+        if (data_len < len + 4 + count)
+        {
+            debug_error("invalid data len %d  %d  %d\n", data_len, len, count);
+            return WDT_ERR;
+        }
+
+        if (mask)
+        {
+            mask_key[0] = data[4];
+            mask_key[1] = data[5];
+            mask_key[2] = data[6];
+            mask_key[3] = data[7];
+            data_start = 8;
+        }
+        else
+        {
+            data_start = 4;
+        }
+    }
+    else if (len == 127)
+    {
+        if (data_len < 10)
+        {
+            return WDT_ERR;
+        }
+        if (data[2] != 0 || data[3] != 0 || data[4] != 0 || data[5] != 0)    //使用8个字节存储长度时,前4位必须为0,装不下那么多数据...
+        {
+            return WDT_ERR;
+        }
+
+        len = data[6];
+        len = (len << 8) + data[7];
+        len = (len << 8) + data[8];
+        len = (len << 8) + data[9];
+
+        if (data_len < len + 10 + count)
+        {
+            return WDT_ERR;
+        }
+        if (mask)
+        {
+            mask_key[0] = data[10];
+            mask_key[1] = data[11];
+            mask_key[2] = data[12];
+            mask_key[3] = data[13];
+            data_start = 14;
+        }
+        else
+        {
+            data_start = 10;
+        }
+    }
+    else
+    {
+        if (data_len < len + 2 + count)
+        {
+            debug_error("data len %d invalid \n", data_len);
+            return WDT_ERR;
+        }
+        if (mask)
+        {
+            mask_key[0] = data[2];
+            mask_key[1] = data[3];
+            mask_key[2] = data[4];
+            mask_key[3] = data[5];
+            data_start = 6;
+        }
+        else
+        {
+            data_start = 2;
+        }
+    }
+
+    if (data_len < len + data_start)
+    {
+        debug_error("data len %d invalid \n", data_len);
+        return WDT_ERR;
+    }
+
+    if (package_max_len < len + 1)
+    {
+        debug_error("data len %d invalid \n", data_len);
+        return WDT_ERR;
+    }
+
+    if (mask)
+    {
+        // 解包数据使用掩码时, 使用异或解码, mask_key[4]依次和数据异或运算, 逻辑如下
+        for(i = 0, count = 0; i < len; i++)
+        {
+            temp1 = mask_key[count];
+            temp2 = data[i + data_start];
+            *package++ =  (char)(((~temp1)&temp2) | (temp1&(~temp2)));  // 异或运算后得到数据
+            count += 1;
+            if (count >= sizeof(mask_key))    // mask_key[4]循环使用
+            {
+                count = 0;
+            }
+        }
+        *package = '\0';
+    }
+    else
+    {
+        // 解包数据没使用掩码, 直接复制数据段
+        memcpy(package, &data[data_start], len);
+        package[len] = '\0';
+    }
+
+    // debug_info("data %d %d %d \n", data_len, len, data_start);
+
+    return ret;
+}
+
+#if 0
 char * ws_handle_payload_data(WS_HANDLE handle, const char *buffer, const int buf_len)
 {
     int  i = 0;
@@ -133,7 +319,7 @@ char * ws_handle_payload_data(WS_HANDLE handle, const char *buffer, const int bu
     }
 
     int mask_flag = ((buffer[1] & 0x80) == 0x80); // 是否包含掩码
-    if (!mask_flag)
+    if (0 == mask_flag)
     {
         debug_error("no mask.\n");
         return NULL;// 不包含掩码的暂不处理
@@ -174,6 +360,7 @@ char * ws_handle_payload_data(WS_HANDLE handle, const char *buffer, const int bu
     else
     {
         //如果payloadLen为0-125则payloadLen为真实数据长度
+        memset(masks, 0, sizeof(masks));
         memcpy(masks, buffer+2, 4);                         //获取掩码(payloadLen结束后跟4字节mask)
         if (payload_len <= sizeof(handle->payload_data))
         {
@@ -187,12 +374,13 @@ char * ws_handle_payload_data(WS_HANDLE handle, const char *buffer, const int bu
         handle->payload_data[i] = (char)(handle->payload_data[i] ^ masks[i % 4]);   // 将数据与掩码进行异或运算,获得原始数据
     }
 
-    debug_print("data(%d):%s", payload_len, handle->payload_data);
+    debug_print("data(%d):(%s) \n", payload_len, handle->payload_data);
 
     return handle->payload_data;
 }
+#endif
 
-char *ws_construct_packet_data(WS_HANDLE handle, const char *message, unsigned long *len)
+char * ws_construct_packet_data(WS_HANDLE handle, const char *message, unsigned long *len)
 {
     unsigned long n;
 
@@ -233,7 +421,7 @@ char *ws_construct_packet_data(WS_HANDLE handle, const char *message, unsigned l
         {
             // 当n大于0xFFFF则payload len前7位为127,后8字节为真实长度
             memset(handle->send_data, 0, sizeof(handle->send_data));
-            handle->send_data[0] = 0x81;					//设置第0-7位为1000 0001(FIN为1,Opcode为1)
+            handle->send_data[0] = 0x81;				//设置第0-7位为1000 0001(FIN为1,Opcode为1)
             handle->send_data[1] = 127;					//设置第8-15位为0111 1111
             handle->send_data[2] = (n>>56 & 0xFF);		//设置第16-23位为n-128(将n右移8位在与1111 1111做与运算)
     		handle->send_data[3] = (n>>48 & 0xFF);		//设置第24-31位为n-128(将n右移8位在与1111 1111做与运算)
@@ -244,7 +432,7 @@ char *ws_construct_packet_data(WS_HANDLE handle, const char *message, unsigned l
     		handle->send_data[8] = (n>>8 & 0xFF);		//设置第64-71位为n-128(将n右移8位在与1111 1111做与运算)
             handle->send_data[9] = (n & 0xFF);			//设置第72-79位为n的右8(0-7)位
             memcpy(handle->send_data+10, message, n);   //将message添加到第10个字节之后
-            *len = n+10;						            //将指针指向message首地址
+            *len = n+10;   			                    //将指针指向message首地址
         }
     }
 
@@ -264,8 +452,6 @@ static char * extract_client_key(WS_HANDLE handle, const char * buffer)
         return NULL;
     }
 
-    memset(handle->key, 0, sizeof(handle->key));
-
     start = strstr(buffer, flag);
     if (NULL == start)
     {
@@ -273,11 +459,13 @@ static char * extract_client_key(WS_HANDLE handle, const char * buffer)
         return NULL;
     }
 
+    memset(handle->key, 0, sizeof(handle->key));
+
     start   += strlen(flag);    // 将指针移至key起始位置
     buf_len = strlen(buffer);   // 获取buffer长度
     for (i=0; i<buf_len; i++)
     {
-        if (start[i]==0x0A || start[i]==0x0D)
+        if ((start[i] == 0x0A) || (start[i] == 0x0D))
         {
             break;
         }
@@ -286,3 +474,112 @@ static char * extract_client_key(WS_HANDLE handle, const char * buffer)
 
     return handle->key;
 }
+
+#if 0
+void webSocket_getRandomString(unsigned char *buf, unsigned int len)
+{
+    unsigned int i;
+    unsigned char temp;
+    srand((int)time(0));
+    for(i = 0; i < len; i++)
+    {
+        temp = (unsigned char)(rand()%256);
+        if(temp == 0)   // 随机数不要0, 0 会干扰对字符串长度的判断
+            temp = 128;
+        buf[i] = temp;
+    }
+}
+
+int webSocket_enPackage(unsigned char *data, unsigned int dataLen, unsigned char *package, unsigned int packageMaxLen, int isMask, int type)
+{
+    unsigned char maskKey[4] = {0};    // 掩码
+    unsigned char temp1, temp2;
+    int count;
+    unsigned int i, len = 0;
+
+    if(packageMaxLen < 2)
+        return -1;
+
+    if(type == WDT_MINDATA)
+        *package++ = 0x00;
+    else if(type == WDT_TXTDATA)
+        *package++ = 0x81;
+    else if(type == WDT_BINDATA)
+        *package++ = 0x82;
+    else if(type == WDT_DISCONN)
+        *package++ = 0x88;
+    else if(type == WDT_PING)
+        *package++ = 0x89;
+    else if(type == WDT_PONG)
+        *package++ = 0x8A;
+    else
+        return -1;
+    //
+    if(isMask)
+        *package = 0x80;
+    len += 1;
+    //
+    if(dataLen < 126)
+    {
+        *package++ |= (dataLen&0x7F);
+        len += 1;
+    }
+    else if(dataLen < 65536)
+    {
+        if(packageMaxLen < 4)
+            return -1;
+        *package++ |= 0x7E;
+        *package++ = (char)((dataLen >> 8) & 0xFF);
+        *package++ = (unsigned char)((dataLen >> 0) & 0xFF);
+        len += 3;
+    }
+    else if(dataLen < 0xFFFFFFFF)
+    {
+        if(packageMaxLen < 10)
+            return -1;
+        *package++ |= 0x7F;
+        *package++ = 0; //(char)((dataLen >> 56) & 0xFF);   // 数据长度变量是 unsigned int dataLen, 暂时没有那么多数据
+        *package++ = 0; //(char)((dataLen >> 48) & 0xFF);
+        *package++ = 0; //(char)((dataLen >> 40) & 0xFF);
+        *package++ = 0; //(char)((dataLen >> 32) & 0xFF);
+        *package++ = (char)((dataLen >> 24) & 0xFF);        // 到这里就够传4GB数据了
+        *package++ = (char)((dataLen >> 16) & 0xFF);
+        *package++ = (char)((dataLen >> 8) & 0xFF);
+        *package++ = (char)((dataLen >> 0) & 0xFF);
+        len += 9;
+    }
+    //
+    if(isMask)    // 数据使用掩码时, 使用异或解码, maskKey[4]依次和数据异或运算, 逻辑如下
+    {
+        if(packageMaxLen < len + dataLen + 4)
+            return -1;
+        webSocket_getRandomString(maskKey, sizeof(maskKey));    // 随机生成掩码
+        *package++ = maskKey[0];
+        *package++ = maskKey[1];
+        *package++ = maskKey[2];
+        *package++ = maskKey[3];
+        len += 4;
+        for(i = 0, count = 0; i < dataLen; i++)
+        {
+            temp1 = maskKey[count];
+            temp2 = data[i];
+            *package++ = (char)(((~temp1)&temp2) | (temp1&(~temp2)));  // 异或运算后得到数据
+            count += 1;
+            if(count >= sizeof(maskKey))    // maskKey[4]循环使用
+                count = 0;
+        }
+        len += i;
+        *package = '\0';
+    }
+    else    // 数据没使用掩码, 直接复制数据段
+    {
+        if(packageMaxLen < len + dataLen)
+            return -1;
+        memcpy(package, data, dataLen);
+        package[dataLen] = '\0';
+        len += dataLen;
+    }
+    //
+    return len;
+}
+#endif

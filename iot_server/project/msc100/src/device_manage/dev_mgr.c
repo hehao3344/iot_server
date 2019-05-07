@@ -14,13 +14,12 @@
 
 
 #include "msg_handle/json_msg_handle.h"
-#include "dev_param.h"
 #include "hash_value.h"
 #include "ws.h"
 #include "dev_mgr.h"
 
 #define MAX_MSG_LEN     1024
-//#define MAX_MSG_LEN         4096
+//#define MAX_MSG_LEN   4096
 #define MAX_EVENTS      256     /* 实际作用不大 */
 #define MAXSOCKET       MAX_EVENTS
 
@@ -125,12 +124,22 @@ DEV_MGR_HANDLE dev_mgr_create(void)
         goto create_failed;
     }
 
-
     return handle;
 
 create_failed:
     dev_mgr_destroy(handle);
     return NULL;
+}
+
+DEV_PARAM_HANDLE dev_mgr_get_dev_param_handle(DEV_MGR_HANDLE handle)
+{
+    DEV_PARAM_HANDLE ret = NULL;
+    if (NULL != handle)
+    {
+        ret = handle->hdev_param;
+    }
+
+    return ret;
 }
 
 void dev_mgr_destroy(DEV_MGR_HANDLE handle)

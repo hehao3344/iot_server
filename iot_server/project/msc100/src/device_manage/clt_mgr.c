@@ -8,19 +8,16 @@
 
 #include <core/core.h>
 
-#include <crypto/sha1.h>
-#include <crypto/base64.h>
-#include <crypto/int_lib.h>
-
-
 #include "msg_handle/json_msg_clt.h"
+#include "msg_handle/json_format.h"
+#include "dev_param.h"
 #include "clt_param.h"
 #include "hash_value.h"
 #include "ws.h"
 #include "clt_mgr.h"
 
 #define MAX_MSG_LEN     1024
-#define MAX_EVENTS      256     /* 实际作用不大 */
+#define MAX_EVENTS      128 // 256     /* 实际作用不大 */
 #define MAXSOCKET       MAX_EVENTS
 
 #define WSS_RESP "HTTP/1.1 101 Switching Protocols\r\n\
@@ -38,7 +35,6 @@ typedef struct _CLT_MGR_OBJECT
     CLT_PARAM_HANDLE hclt_param;
 
     JMC_HANDLE       h_jmc;
-
     WS_HANDLE        ws_handle;
 
     RTHREAD_HANDLE   rthread_center;
@@ -47,6 +43,7 @@ typedef struct _CLT_MGR_OBJECT
     RTHREAD_HANDLE   rthread_flush_center;
     TTASK_HANDLE     ttask_flush_center;
 
+    DEV_PARAM_HANDLE hdev_param;
 } CLT_MGR_OBJECT;
 
 static CLT_MGR_OBJECT * instance(void);
@@ -55,15 +52,16 @@ static void clt_flush_center(long user_info);
 static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg);
 static void sock_exit_fn(void * arg, int sock_fd);
 
-CLT_MGR_HANDLE clt_mgr_create(void)
+CLT_MGR_HANDLE clt_mgr_create(DEV_PARAM_HANDLE hdev_param)
 {
     CLT_MGR_OBJECT * handle = instance();
-    if (NULL == handle)
+    if ((NULL == handle) || (NULL == hdev_param))
     {
         debug_error("not enough memory \n");
         return NULL;
     }
 
+    handle->hdev_param = hdev_param;
     handle->ws_handle = ws_create();
     if (NULL == handle->ws_handle)
     {
@@ -198,10 +196,12 @@ void clt_mgr_destroy(CLT_MGR_HANDLE handle)
 static void clt_thread_center(long param)
 {
     char peer_ip[16];
-    char resp_buf[512];
+    char resp_buf[1024];
+    char send_buf[1024];
 
     unsigned short peer_port;
     char   recv_buf[MAX_MSG_LEN];
+    char   dec_buf[MAX_MSG_LEN];
 
     CLT_MGR_OBJECT * handle = (CLT_MGR_OBJECT *)param;
     if (NULL == handle)
@@ -210,24 +210,10 @@ static void clt_thread_center(long param)
         return;
     }
 
-    /*
-    * 声明epoll_event结构体变量ev，变量ev用于注册事件，
-    * 数组events用于回传需要处理的事件
-    */
     struct epoll_event ev, events[MAX_EVENTS];
-    // 生成用于处理accept的epoll专用文件描述符
 
     ev.data.fd = handle->sock_fd;
-    // 设置这个文件描述符需要epoll监控的事件
-    /*
-     * EPOLLIN代表文件描述符读事件
-     * accept, recv都是读事件
-     */
     ev.events = EPOLLIN;
-    /*
-     * 注册epoll事件
-     * 函数epoll_ctl中&ev参数表示需要epoll监视的listen_st这个socket中的一些事件
-     */
     epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, handle->sock_fd, &ev);
 
     while(1)
@@ -259,25 +245,15 @@ static void clt_thread_center(long param)
                 }
                 debug_info("new connect in [%s:%d]\n", peer_ip, peer_port);
 
-                // 设置客户端socket非阻塞
                 tcp_set_nonblock(new_fd);
 
-                //clt_param_add_connect_sock(handle->hclt_param, new_fd);
-
-                //将客户端socket加入到epoll池中
                 struct epoll_event client_ev;
                 client_ev.data.fd = new_fd;
                 client_ev.events  = EPOLLIN | EPOLLERR | EPOLLHUP;
                 epoll_ctl(handle->epoll_fd, EPOLL_CTL_ADD, new_fd, &client_ev);
-                /*
-                 * 注释：当epoll池中new_fd这个服务器socket有消息的时候
-                 * 只可能是来自客户端的连接消息
-                 * recv, send使用的都是客户端的socket，不会向listen_st发送消息的
-                 */
+
                 continue;
             }
-
-            // 客户端有事件到达
             if (events[i].events & EPOLLIN)
             {
                 // 表示服务器这边的client_st接收到消息
@@ -287,27 +263,21 @@ static void clt_thread_center(long param)
                 if (recv_len <= 0)
                 {
                     tcp_close(events[i].data.fd);
-                    // 接收数据出错或者客户端已经关闭
                     events[i].data.fd = -1;
-                    /*这里continue是因为客户端socket已经被关闭了，
-                     * 但是这个socket可能还有其他的事件，会继续执行其他的事件，
-                     * 但是这个socket已经被设置成-1
-                     * 所以后面的close_socket()函数都会报错
-                     */
                     continue;
                 }
                 else
                 {
                     /* 处理消息 */
                     debug_info("new app msg len %d \n", recv_len);
-
-                    if (0 == clt_param_sock_fd_is_exist(handle->hclt_param, events[i].data.fd))
+                    int sockfd_exist = clt_param_sock_fd_is_exist(handle->hclt_param, events[i].data.fd);
+                    if (0 == sockfd_exist)
                     {
                         char * accept_key = ws_calculate_accept_key(handle->ws_handle, recv_buf);
                         if (NULL != accept_key)
                         {
                             debug_info("get accept_key [%s] \n", accept_key);
-                            char send_buf[512] = {0};
+                            memset(send_buf, 0, sizeof(send_buf));
                             strcat(send_buf, WSS_RESP);
                             strcat(send_buf, accept_key);
                             strcat(send_buf, "\r\n\r\n");
@@ -320,26 +290,25 @@ static void clt_thread_center(long param)
                     }
                     else
                     {
-                        char * payload_data = ws_handle_payload_data(handle->ws_handle, recv_buf, strlen(recv_buf));
-                        debug_info("=== %s \n",  payload_data);
-                        if (NULL != payload_data)
+                        int ret = ws_decode_data(handle->ws_handle,  (unsigned char *)recv_buf, recv_len, (unsigned char *)dec_buf, sizeof(dec_buf));
+                        if (WDT_ERR != ret)
                         {
-                            json_msg_clt_msg(handle->h_jmc, payload_data, strlen(payload_data), resp_buf, sizeof(resp_buf), &(events[i].data.fd));
+                            debug_info("get msg %s \n", dec_buf);
+                            //int len = 0;
+                            //char * send_test = ws_construct_packet_data(handle->ws_handle, "abababc", &len);
+                            //tcp_send(events[i].data.fd, send_test, len);
+
+                            json_msg_clt_msg(handle->h_jmc, dec_buf, strlen(dec_buf), resp_buf, sizeof(resp_buf), &(events[i].data.fd));
                         }
                     }
 
                 }
-                /*
-                 * 此处不能continue，因为每个socket都可能有多个事件同时发送到服务器端
-                 * 这也是下面语句用if而不是if-else的原因，
-                 */
             }
 
             //客户端有事件到达
             if (events[i].events & EPOLLERR)
             {
                 debug_error("EPOLLERR\n");
-                //返回出错事件，关闭socket，清理epoll池，当关闭socket并且events[i].data.fd=-1, epoll会自动将该socket从池中清除
                 tcp_close(events[i].data.fd);
                 events[i].data.fd = -1;
                 continue;
@@ -389,6 +358,8 @@ static CLT_MGR_OBJECT * instance(void)
     return handle;
 }
 
+#if 0
+#if 0
 static char * test_get_param_str = "{\
 \"method\":\"down_msg\",\
 \"dev_uuid\":\"02001122334455\",\
@@ -415,15 +386,31 @@ static char * test_get_param_str = "{\
 {\
 \"dev_uuid\":\"02001122334455\",\
 \"switch\":\"on\"\
-},\
+}\
 }\
 }";
+#endif
 
+static char * test_get_param_str = "{\
+\"method\":\"down_msg\",\
+\"dev_uuid\":\"02001122334455\",\
+\"req_id\":123456789,\
+\"code\":0,\
+\"attr\":\
+{\
+\"dev1\": \
+{ \
+\"dev_uuid\":\"02001122334455\", \
+\"switch\":\"on\"\
+}\
+}\
+}";
+#endif
 
 static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
 {
     CLT_MGR_OBJECT *handle = (CLT_MGR_OBJECT *)arg;
-
+    unsigned long len = 0;
     UNUSED_VALUE(handle);
     debug_info("json callback called cmd 0x%x app_id %s\n", cb_param->e_msg, cb_param->gopenid);
     switch(cb_param->e_msg)
@@ -431,15 +418,69 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
         case E_DEV_GET_PARAM:
         {
             int sock_fd = *(int *)ext_arg;
+            char cc_uuid[20] = {0}; // MAX_ID_LEN 16
+            char to_app_buf[512];
+            if (0 == clt_param_get_dev_uuid_by_openid(handle->hclt_param, cb_param->gopenid, cc_uuid, sizeof(cc_uuid)))
+            {
+                debug_info("get dev_uuid: %s \n", cc_uuid);
+                SUB_DEV_NODE sub_node;
+                memset(&sub_node, 0, sizeof(SUB_DEV_NODE));
+                if (0 == dev_param_get_sub_dev_node(handle->hdev_param, cc_uuid, &sub_node))
+                {
+                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_CC_GET_PARAM_RESP, cc_uuid,
+                             0, 0, "01", "off",  "02", "off", "03", "on", "04", "on");
+                }
+                else
+                {
+                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_CC_GET_PARAM_RESP, cc_uuid,
+                             0, 0, "01", "off",  "02", "off", "03", "on", "04", "on");
+                }
+                char * send_test = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
+                debug_info("start send len %ld sockfd %d \n", len, sock_fd);
+                tcp_send(sock_fd, send_test, len);
+            }
+            else
+            {
+                 debug_error("can't find uuid of openid: %s \n", cb_param->gopenid);
 
-            //int hash_value = (int)string_to_hash(cb_param->cc_uuid);
-            //dev_param_register(handle->hclt_param, cb_param->cc_uuid, hash_value, sock_fd);
 
-            unsigned long len = 0;
+                debug_error("get dev_uuid: %s \n", cc_uuid);
+                SUB_DEV_NODE sub_node;
+                memset(&sub_node, 0, sizeof(SUB_DEV_NODE));
+                if (0 == dev_param_get_sub_dev_node(handle->hdev_param, cc_uuid, &sub_node))
+                {
+                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_CC_GET_PARAM_RESP, cc_uuid,
+                             0, 0, "01", "known",  "02", "off", "03", "on", "04", "on");
+                }
+                else
+                {
+                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_CC_GET_PARAM_RESP, cc_uuid,
+                             0, 0, "01", "known",  "02", "off", "03", "on", "04", "on");
+                }
+                char * send_test = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
+                debug_info("start send len %ld sockfd %d \n", len, sock_fd);
+                tcp_send(sock_fd, send_test, len);
+            }
 
-            char * send_test = ws_construct_packet_data(handle->ws_handle, test_get_param_str, &len);
-            debug_info("start send len %ld \n", len);
-            tcp_send(sock_fd, send_test, len);
+            break;
+        }
+        case E_DEV_HEART_BEAT:
+        {
+            int sock_fd = *(int *)ext_arg;
+            char to_app_buf[256];
+
+            if (0 == clt_param_heart_beat(handle->hclt_param, cb_param->gopenid, sock_fd))
+            {
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_CC_HEART_BEAT_RESP, cb_param->gopenid, cb_param->req_id);
+
+                char * send_test = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
+                debug_info("start send len %ld sockfd %d msg %s \n", len, sock_fd, to_app_buf);
+                tcp_send(sock_fd, send_test, len);
+            }
+            else
+            {
+                debug_info("can't find open id %s \n", cb_param->gopenid);
+            }
 
             break;
         }
@@ -463,7 +504,7 @@ static void sock_exit_fn(void * arg, int sock_fd)
 
 void clt_mgr_unit_test(void)
 {
-    CLT_MGR_HANDLE handle = clt_mgr_create();
+    CLT_MGR_HANDLE handle = clt_mgr_create(NULL);
     if (NULL == handle)
     {
         debug_error("clt_mgr_create failed \n");

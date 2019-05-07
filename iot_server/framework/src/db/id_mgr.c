@@ -166,7 +166,7 @@ int id_mgr_get_uuid_by_group_openid(ID_MGR_HANDLE handle, char * openid, char * 
             if ((NULL != dbResult[nRow]) && (strlen(dbResult[nRow]) > 0))
             {
                 strncpy(buf, dbResult[nRow], buf_len);
-                debug_info("get gopenid %s \n", buf);
+                debug_info("get dev_uuid %s \n", buf);
                 ret = 0;
             }
             else

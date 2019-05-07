@@ -174,6 +174,7 @@ char * sha1_hash(const char *source)
 	SHA1Reset(&sha);
 	SHA1Input(&sha, source, strlen(source));
 
+    memset(hash_buf, 0, sizeof(hash_buf));
 	if (!SHA1Result(&sha))
     {
 		printf("SHA1 ERROR: Could not compute message digest \n");
@@ -181,7 +182,6 @@ char * sha1_hash(const char *source)
 	}
 	else
     {
-		memset(hash_buf, 0, sizeof(hash_buf));
 		snprintf(hash_buf, sizeof(hash_buf), "%08X%08X%08X%08X%08X", sha.Message_Digest[0],sha.Message_Digest[1],
 		                                        sha.Message_Digest[2],sha.Message_Digest[3],sha.Message_Digest[4]);
 	}

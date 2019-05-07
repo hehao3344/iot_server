@@ -34,7 +34,7 @@ typedef struct _DEV_PARAM_OBJECT
     sock_exit_callback cb;
     void * arg;
 
-    struct  hashtable * hclient;
+    struct  hashtable * hcc_id;
 
     pthread_mutex_t   mutex;
     ID_MGR_HANDLE     hid_mgr;
@@ -97,7 +97,7 @@ DEV_PARAM_HANDLE dev_param_create(int max_dev_count)
 
     id_mgr_add_device(handle->hid_mgr, "10001122334455");
 
-    handle->hclient = create_hashtable(max_dev_count, to_hash, keys_equal_func);
+    handle->hcc_id = create_hashtable(max_dev_count, to_hash, keys_equal_func);
     INIT_LIST_HEAD(&handle->head);
     INIT_LIST_HEAD(&handle->sock_fd_head);
     pthread_mutex_init(&handle->mutex, NULL);
@@ -176,7 +176,7 @@ int dev_param_register(DEV_PARAM_HANDLE handle, char *cc_id, int hash_value, int
         debug_print("re-register id %s \n", cc_id);
         pthread_mutex_lock(&handle->mutex);
         list_del(&gw_dev->list);
-        hashtable_remove(handle->hclient, gw_dev->cc_id);
+        hashtable_remove(handle->hcc_id, gw_dev->cc_id);
         free(gw_dev);
         pthread_mutex_unlock(&handle->mutex);
     }
@@ -217,7 +217,7 @@ int dev_param_register(DEV_PARAM_HANDLE handle, char *cc_id, int hash_value, int
             }
         }
 
-        if (!hashtable_insert(handle->hclient, gw_dev_tmp->cc_id, gw_dev_tmp))
+        if (!hashtable_insert(handle->hcc_id, gw_dev_tmp->cc_id, gw_dev_tmp))
         {
             debug_print(" hashtable_insert failed \n");
 	        free(gw_dev_tmp);
@@ -358,7 +358,7 @@ void dev_param_flush(DEV_PARAM_HANDLE handle)
                 gw_dev_list->sock_fd = -1;
 
                 list_del(&gw_dev_list->list);
-                hashtable_remove(handle->hclient, gw_dev_list->cc_id);
+                hashtable_remove(handle->hcc_id, gw_dev_list->cc_id);
                 free(gw_dev_list);
                 pthread_mutex_unlock(&handle->mutex);
             }
@@ -392,6 +392,41 @@ void dev_param_sock_fd_flush(DEV_PARAM_HANDLE handle)
     }
 }
 
+int dev_param_get_sub_dev_node(DEV_PARAM_HANDLE handle, char *cc_id, SUB_DEV_NODE * sub_dev_node)
+{
+    int ret = -1;
+    struct list_head   *pos = NULL;
+    struct list_head   *n   = NULL;
+    GW_DEVICE* gw_dev_list = NULL;
+    GW_DEVICE* gw_dev_tmp = NULL;
+	gw_dev_tmp = (GW_DEVICE * )hashtable_search(handle->hcc_id, cc_id);
+	if ((NULL == gw_dev_tmp) || (NULL == sub_dev_node))
+	{
+	    debug_error("can't find cc_id %s \n", cc_id);
+		return -1;
+	}
+
+    list_for_each_safe(pos, n, &handle->head)
+    {
+        gw_dev_list = list_entry(pos, GW_DEVICE, list);
+        if ((NULL != gw_dev_list) && (0 == strcmp(cc_id, gw_dev_list->cc_id)))
+        {
+            pthread_mutex_lock(&handle->mutex);
+            memcpy(&sub_dev_node, &gw_dev_list->sub_dev, sizeof(SUB_DEV_NODE));
+            pthread_mutex_unlock(&handle->mutex);
+            ret = 0;
+            break;
+        }
+    }
+
+	if (0 != hashtable_remove(handle->hcc_id, cc_id))
+	{
+		debug_info("hashtable_remove failed \n");
+	}
+
+	return ret;
+}
+
 int dev_param_remove(DEV_PARAM_HANDLE handle, char *cc_id)
 {
     int ret   = -1;
@@ -399,7 +434,7 @@ int dev_param_remove(DEV_PARAM_HANDLE handle, char *cc_id)
     struct list_head   *n   = NULL;
     GW_DEVICE* gw_dev_list = NULL;
     GW_DEVICE* gw_dev_tmp = NULL;
-	gw_dev_tmp = (GW_DEVICE * )hashtable_search(handle->hclient, cc_id);
+	gw_dev_tmp = (GW_DEVICE * )hashtable_search(handle->hcc_id, cc_id);
 	if (NULL == gw_dev_tmp)
 	{
 		return -1;
@@ -418,7 +453,7 @@ int dev_param_remove(DEV_PARAM_HANDLE handle, char *cc_id)
         }
     }
 
-	if (0 == hashtable_remove(handle->hclient, cc_id))
+	if (0 == hashtable_remove(handle->hcc_id, cc_id))
 	{
 		ret = 0;
 	}
@@ -428,13 +463,13 @@ int dev_param_remove(DEV_PARAM_HANDLE handle, char *cc_id)
 
 int dev_param_get_count(DEV_PARAM_HANDLE handle)
 {
-	return (int)hashtable_count(handle->hclient);
+	return (int)hashtable_count(handle->hcc_id);
 }
 
 int dev_param_get_sock_fd(DEV_PARAM_HANDLE handle, char *cc_id, int *sock_fd)
 {
     int ret = -1;
-    GW_DEVICE *client = (GW_DEVICE *)hashtable_search(handle->hclient, cc_id);
+    GW_DEVICE *client = (GW_DEVICE *)hashtable_search(handle->hcc_id, cc_id);
     if (NULL != client)
     {
         *sock_fd = client->sock_fd;
@@ -452,7 +487,7 @@ void dev_param_dump(DEV_PARAM_HANDLE handle)
     char  ymd_buf[16];
     char  filename[32];
 
-    count = (int)hashtable_count(handle->hclient);
+    count = (int)hashtable_count(handle->hcc_id);
 
     debug_print("device info: \n");
     debug_print("total [%d] device registered \n", count);
@@ -515,7 +550,7 @@ void dev_param_destroy(DEV_PARAM_HANDLE handle)
     list_del(&handle->sock_fd_head);
 
     id_mgr_destroy(handle->hid_mgr);
-    hashtable_destroy(handle->hclient, 0);
+    hashtable_destroy(handle->hcc_id, 0);
     pthread_mutex_destroy(&handle->mutex);
     free(handle);
 }
@@ -525,7 +560,7 @@ void dev_param_destroy(DEV_PARAM_HANDLE handle)
 /*******************************************************************************/
 static GW_DEVICE *get_device_by_id(DEV_PARAM_HANDLE handle, char *cc_id)
 {
-	return (GW_DEVICE*)hashtable_search(handle->hclient, cc_id);
+	return (GW_DEVICE*)hashtable_search(handle->hcc_id, cc_id);
 }
 
 static unsigned int to_hash(void* pstring)

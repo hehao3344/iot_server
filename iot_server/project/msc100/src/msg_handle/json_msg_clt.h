@@ -12,7 +12,8 @@ extern "C"
 
 typedef enum
 {
-    E_DEV_GET_PARAM = 0x01,  /* 获取参数 */
+    E_DEV_GET_PARAM = 0x01, /* 获取参数 */
+    E_DEV_HEART_BEAT,       /* 心跳 */
 } E_CLT_MSG;
 
 typedef struct _CLT_MSG_CB_PARAM
@@ -39,4 +40,3 @@ void json_msg_clt_destroy(JMC_HANDLE handle);
 #endif
 
 #endif
-
