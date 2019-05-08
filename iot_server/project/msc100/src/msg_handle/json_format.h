@@ -7,7 +7,7 @@ extern "C"
 #endif
 
 // 小程序 服务器
-#define  JSON_IOTS_CC_GET_PARAM_RESP "{\
+#define  JSON_IOTS_APP_GET_PARAM_RESP "{\
 \"method\":\"down_msg\",\
 \"dev_uuid\":\"%s\",\
 \"req_id\":%d,\
@@ -37,12 +37,37 @@ extern "C"
 }\
 }"
 
-#define  JSON_IOTS_CC_HEART_BEAT_RESP "{\
+#define  JSON_IOTS_APP_HEART_BEAT_RESP "{\
 \"method\":\"down_msg\",\
 \"open_id\":\"%s\",\
 \"req_id\":%d,\
 \"code\":0\
 }"
+
+#define  JSON_IOTS_APP_SET_SWITCH_RESP "{\
+\"method\":\"down_msg\", \
+\"dev_uuid\":\"%s\",\
+\"req_id\":%d,\
+\"code\":%d\
+}"
+
+
+// 服务器 子设备
+#define  JSON_IOTS_CC_SET_SWITCH_REQ    "{\
+\"method\":\"down_msg\", \
+\"cc_uuid”:\"%s\",\
+\"req_id\":%d,\
+\"ts\":%d,\
+\"attr\":\
+{\
+\"dev_uuid\":\"%s\",\
+\"cmd\":\"set_switch\":\
+{\
+\"switch\":\"%s\"\
+}\
+}\
+}"
+
 
 
 #ifdef __cplusplus

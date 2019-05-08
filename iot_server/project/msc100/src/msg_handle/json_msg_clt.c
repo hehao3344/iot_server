@@ -228,9 +228,9 @@ static int clt_up_msg_get_param(void * arg, char *buffer, char *resp_buf, int bu
 {
 "method":"up_msg",
 "open_id":"XXXXXX",
-		"dev_uuid":"02001122334455",
-		"req_id":123456789,
-		"attr":
+"dev_uuid":"02001122334455",
+"req_id":123456789,
+"attr":
 {
 "cmd":"set_switch",
 "dev_uuid":"02001122334455", /* 为子设备的uuid */
@@ -240,7 +240,85 @@ static int clt_up_msg_get_param(void * arg, char *buffer, char *resp_buf, int bu
 #endif
 static int clt_up_msg_set_switch(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
 {
-    debug_info("uncompleted \n");
+    int ret = -1;
+    cJSON *root = NULL;
+    cJSON *sub_obj = NULL;
+    CLT_MSG_CB_PARAM  cb_param;
+    JSON_MSG_CLT_OBJECT * handle = (JSON_MSG_CLT_OBJECT *)arg;
+    if (NULL == handle)
+    {
+        return -1;
+    }
+    memset(&cb_param, 0, sizeof(CLT_MSG_CB_PARAM));
+    root = cJSON_Parse(buffer);
+    if (NULL == root)
+    {
+        debug_print("cJSON_Parse error!\n");
+        return -1;
+    }
+
+    sub_obj = cJSON_GetObjectItem(root, "method");
+    if (NULL != sub_obj)
+    {
+        if (0 != strcmp(sub_obj->valuestring, "up_msg"))
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        return -1;
+    }
+    sub_obj = cJSON_GetObjectItem(root, "open_id");
+    if (NULL != sub_obj)
+    {
+        if (strlen(sub_obj->valuestring) < sizeof(cb_param.gopenid))
+        {
+            strncpy(cb_param.gopenid, sub_obj->valuestring, sizeof(cb_param.gopenid));
+        }
+    }
+    sub_obj = cJSON_GetObjectItem(root, "req_id");
+    if (NULL != sub_obj)
+    {
+        cb_param.req_id = sub_obj->valueint;
+    }
+    cJSON * attr_obj = cJSON_GetObjectItem(root, "attr");
+    if (NULL == attr_obj)
+    {
+        debug_error("can't find attr \n");
+        return -1;
+    }
+    cJSON * cmd_obj = cJSON_GetObjectItem(attr_obj, "cmd");
+    if (NULL != cmd_obj)
+    {
+        if (0 == strcmp(cmd_obj->valuestring, "set_switch"))
+        {
+            cb_param.e_msg = E_DEV_SET_SWITCH;
+        }
+    }
+
+
+    cJSON * dev_uuid_obj = cJSON_GetObjectItem(attr_obj, "dev_uuid");
+    if (NULL != dev_uuid_obj)
+    {
+        snprintf(cb_param.str_arg[0], sizeof(cb_param.str_arg[0]), "%s", dev_uuid_obj->valuestring);
+    }
+
+    cJSON * switch_obj = cJSON_GetObjectItem(attr_obj, "switch");
+    if (NULL != switch_obj)
+    {
+        snprintf(cb_param.str_arg[1], sizeof(cb_param.str_arg[1]), "%s", switch_obj->valuestring);
+    }
+
+    cb_param.req_id = sub_obj->valueint;
+    if (NULL != handle->cb)
+    {
+        handle->cb(handle->arg, &cb_param, ext_arg);
+        ret = 0;
+    }
+    cJSON_Delete(root);
+
+    return ret;
     return 0;
 }
 

@@ -26,14 +26,14 @@ typedef struct _JSON_HANDLE_PARAM
 } JSON_HANDLE_PARAM;
 
 static int dev_up_msg_register(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
-static int dev_up_msg_register_heart_beat(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
+static int dev_up_msg_heart_beat(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
 static int dev_up_msg_update_status(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
 
 static JSON_HANDLE_PARAM json_handle_tbl[] =
 {
-    {"up_msg",      "register",         dev_up_msg_register,              1},  /* 注册 */
-    {"up_msg",      "heart_beat",       dev_up_msg_register_heart_beat,   1},  /* 心跳 */
-    {"report_msg",  "updata_status",    dev_up_msg_update_status,         0},  /* 上报消息 */
+    {"up_msg",      "register",         dev_up_msg_register,        1},  /* 注册 */
+    {"up_msg",      "heart_beat",       dev_up_msg_heart_beat,      1},  /* 心跳 */
+    {"report_msg",  "updata_status",    dev_up_msg_update_status,   0},  /* 上报消息 */
 };
 
 JMH_HANDLE json_msg_handle_create(void)
@@ -58,10 +58,11 @@ int json_msg_handle_msg(JMH_HANDLE handle, char * buffer, int len, char * resp_b
     }
 
     cJSON *root     = NULL;
-    cJSON *sub_obj  = NULL;
+    cJSON *method_obj  = NULL;
 
     cJSON *attr_obj  = NULL;
     cJSON *cmd_obj  = NULL;
+
     root = cJSON_Parse(buffer);
     if (NULL == root)
     {
@@ -69,20 +70,22 @@ int json_msg_handle_msg(JMH_HANDLE handle, char * buffer, int len, char * resp_b
         return -1;
     }
 
-    attr_obj = cJSON_GetObjectItem(root, "attr");
-    if (NULL != attr_obj)
+    //{"method":"up_msg","cc_uuid":"1084f3eb83a7aa","req_id":100,"attr":{"cmd":"register","version":"V0.01"}}
+    attr_obj   = cJSON_GetObjectItem(root, "attr");
+    method_obj = cJSON_GetObjectItem(root, "method");
+    if ((NULL != attr_obj) && (NULL != method_obj))
     {
+        debug_info("==== [%s] !\n", attr_obj->valuestring);
         cmd_obj = cJSON_GetObjectItem(attr_obj, "cmd");
         if (NULL != cmd_obj)
         {
-            debug_info("==== [%s] !\n", sub_obj->valuestring);
+            debug_info("==== [%s] !\n", cmd_obj->valuestring);
             int i;
             for (i=0; i<ARRAY_SIZE(json_handle_tbl); i++)
             {
-                debug_info("==== [%s] !\n", sub_obj->valuestring);
                 debug_info("==== [%s] !\n", cmd_obj->valuestring);
 
-                if ((0 == strcmp(json_handle_tbl[i].method, sub_obj->valuestring)) &&
+                if ((0 == strcmp(json_handle_tbl[i].method, method_obj->valuestring)) &&
                     (0 == strcmp(json_handle_tbl[i].cmd, cmd_obj->valuestring)))
                 {
                     json_handle_tbl[i].exec_fn(handle, buffer, resp_buf, resp_buf_len, ext_arg);
@@ -95,41 +98,6 @@ int json_msg_handle_msg(JMH_HANDLE handle, char * buffer, int len, char * resp_b
     {
         debug_info("json invalid [%s] \n", buffer);
     }
-
-#if 0
-    sub_obj = cJSON_GetObjectItem(root, "method");
-    if (NULL != sub_obj)
-    {
-        debug_info("==== [%s] !\n", sub_obj->valuestring);
-        attr_obj = cJSON_GetObjectItem(root, "attr");
-        if (NULL != attr_obj)
-        {
-            debug_info("==== [%s] !\n", sub_obj->valuestring);
-            cmd_obj = cJSON_GetObjectItem(attr_obj, "cmd");
-            if (NULL != cmd_obj)
-            {
-                debug_info("==== [%s] !\n", sub_obj->valuestring);
-                int i;
-                for (i=0; i<ARRAY_SIZE(json_handle_tbl); i++)
-                {
-                    debug_info("==== [%s] !\n", sub_obj->valuestring);
-                    debug_info("==== [%s] !\n", cmd_obj->valuestring);
-
-                    if ((0 == strcmp(json_handle_tbl[i].method, sub_obj->valuestring)) &&
-                        (0 == strcmp(json_handle_tbl[i].cmd, cmd_obj->valuestring)))
-                    {
-                        json_handle_tbl[i].exec_fn(handle, buffer, resp_buf, resp_buf_len, ext_arg);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        debug_info("json invalid [%s] \n", buffer);
-    }
-#endif
 
     cJSON_Delete(root);
 
@@ -262,7 +230,7 @@ static int dev_up_msg_register(void * arg, char *buffer, char *resp_buf, int buf
 }
 }
 #endif
-static int dev_up_msg_register_heart_beat(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
+static int dev_up_msg_heart_beat(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
 {
     int ret = -1;
     cJSON *root = NULL;

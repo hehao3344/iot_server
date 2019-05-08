@@ -319,7 +319,6 @@ static void dev_thread_center(long param)
 
 static void dev_flush_center(long param)
 {
-
     DEV_MGR_OBJECT * handle = (DEV_MGR_OBJECT *)param;
     if (NULL == handle)
     {

@@ -269,7 +269,7 @@ static void clt_thread_center(long param)
                 else
                 {
                     /* 处理消息 */
-                    debug_info("new app msg len %d \n", recv_len);
+                    //debug_info("new app msg len %d \n", recv_len);
                     int sockfd_exist = clt_param_sock_fd_is_exist(handle->hclt_param, events[i].data.fd);
                     if (0 == sockfd_exist)
                     {
@@ -294,14 +294,9 @@ static void clt_thread_center(long param)
                         if (WDT_ERR != ret)
                         {
                             debug_info("get msg %s \n", dec_buf);
-                            //int len = 0;
-                            //char * send_test = ws_construct_packet_data(handle->ws_handle, "abababc", &len);
-                            //tcp_send(events[i].data.fd, send_test, len);
-
                             json_msg_clt_msg(handle->h_jmc, dec_buf, strlen(dec_buf), resp_buf, sizeof(resp_buf), &(events[i].data.fd));
                         }
                     }
-
                 }
             }
 
@@ -358,55 +353,6 @@ static CLT_MGR_OBJECT * instance(void)
     return handle;
 }
 
-#if 0
-#if 0
-static char * test_get_param_str = "{\
-\"method\":\"down_msg\",\
-\"dev_uuid\":\"02001122334455\",\
-\"req_id\":123456789,\
-\"code\":0,\
-\"attr\":\
-{\
-\"dev1\": \
-{ \
-\"dev_uuid\":\"02001122334455\", \
-\"switch\":\"on\"\
-},\
-\"dev2\": \
-{ \
-\"dev_uuid\":\"02001122334455\",\
-\"switch\":\"on\"\
-},\
-\"dev3\": \
-{\
-\"dev_uuid\":\"02001122334455\",\
-\"switch\":\"on\"\
-},\
-\"dev4\":\
-{\
-\"dev_uuid\":\"02001122334455\",\
-\"switch\":\"on\"\
-}\
-}\
-}";
-#endif
-
-static char * test_get_param_str = "{\
-\"method\":\"down_msg\",\
-\"dev_uuid\":\"02001122334455\",\
-\"req_id\":123456789,\
-\"code\":0,\
-\"attr\":\
-{\
-\"dev1\": \
-{ \
-\"dev_uuid\":\"02001122334455\", \
-\"switch\":\"on\"\
-}\
-}\
-}";
-#endif
-
 static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
 {
     CLT_MGR_OBJECT *handle = (CLT_MGR_OBJECT *)arg;
@@ -427,39 +373,54 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
                 memset(&sub_node, 0, sizeof(SUB_DEV_NODE));
                 if (0 == dev_param_get_sub_dev_node(handle->hdev_param, cc_uuid, &sub_node))
                 {
-                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_CC_GET_PARAM_RESP, cc_uuid,
+                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_PARAM_RESP, cc_uuid,
                              0, 0, "01", "off",  "02", "off", "03", "on", "04", "on");
                 }
                 else
                 {
-                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_CC_GET_PARAM_RESP, cc_uuid,
+                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_PARAM_RESP, cc_uuid,
                              0, 0, "01", "off",  "02", "off", "03", "on", "04", "on");
                 }
-                char * send_test = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
+                char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
                 debug_info("start send len %ld sockfd %d \n", len, sock_fd);
-                tcp_send(sock_fd, send_test, len);
+
+                if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
+                {
+                    tcp_send(sock_fd, send_buf, len);
+                }
+                else
+                {
+                    debug_info("sockfd %d exist already \n", sock_fd);
+                }
             }
             else
             {
                  debug_error("can't find uuid of openid: %s \n", cb_param->gopenid);
-
 
                 debug_error("get dev_uuid: %s \n", cc_uuid);
                 SUB_DEV_NODE sub_node;
                 memset(&sub_node, 0, sizeof(SUB_DEV_NODE));
                 if (0 == dev_param_get_sub_dev_node(handle->hdev_param, cc_uuid, &sub_node))
                 {
-                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_CC_GET_PARAM_RESP, cc_uuid,
+                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_PARAM_RESP, cc_uuid,
                              0, 0, "01", "known",  "02", "off", "03", "on", "04", "on");
                 }
                 else
                 {
-                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_CC_GET_PARAM_RESP, cc_uuid,
+                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_PARAM_RESP, cc_uuid,
                              0, 0, "01", "known",  "02", "off", "03", "on", "04", "on");
                 }
-                char * send_test = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
+                char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
                 debug_info("start send len %ld sockfd %d \n", len, sock_fd);
-                tcp_send(sock_fd, send_test, len);
+
+                if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
+                {
+                    tcp_send(sock_fd, send_buf, len);
+                }
+                else
+                {
+                    debug_info("sockfd %d exist already \n", sock_fd);
+                }
             }
 
             break;
@@ -471,15 +432,65 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
 
             if (0 == clt_param_heart_beat(handle->hclt_param, cb_param->gopenid, sock_fd))
             {
-                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_CC_HEART_BEAT_RESP, cb_param->gopenid, cb_param->req_id);
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_HEART_BEAT_RESP, cb_param->gopenid, cb_param->req_id);
 
-                char * send_test = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
+                char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
                 debug_info("start send len %ld sockfd %d msg %s \n", len, sock_fd, to_app_buf);
-                tcp_send(sock_fd, send_test, len);
+                if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
+                {
+                    tcp_send(sock_fd, send_buf, len);
+                }
+                else
+                {
+                    debug_info("sockfd %d exit already \n", sock_fd);
+                }
             }
             else
             {
                 debug_info("can't find open id %s \n", cb_param->gopenid);
+            }
+
+            break;
+        }
+        case E_DEV_SET_SWITCH:
+        {
+            int sock_fd = 0;
+            int app_sock_fd = *(int *)ext_arg;
+            char cc_uuid[20] = {0}; // MAX_ID_LEN 16
+            char to_buf[512] = {0};
+            int  success_flags = 0;
+            if (0 == clt_param_get_dev_uuid_by_openid(handle->hclt_param, cb_param->gopenid, cc_uuid, sizeof(cc_uuid)))
+            {
+                debug_info("get dev_uuid: %s sub_dev:%s switch:%s\n", cc_uuid, cb_param->str_arg[0], cb_param->str_arg[1]);
+
+                if (0 == dev_param_get_sock_fd(handle->hdev_param, cc_uuid, &sock_fd))
+                {
+                    snprintf(to_buf, sizeof(to_buf), JSON_IOTS_CC_SET_SWITCH_REQ, cc_uuid,
+                                cb_param->req_id,  12345, cb_param->str_arg[0], cb_param->str_arg[1]);
+
+                    if (tcp_send(sock_fd, to_buf, strlen(to_buf)) > 0)
+                    {
+                        success_flags = 1;
+                    }
+                }
+            }
+
+            if (0 == success_flags)
+            {
+                debug_error("success_flags = %d (failed)\n", success_flags);
+                memset(to_buf, 0, sizeof(to_buf));
+                snprintf(to_buf, sizeof(to_buf), JSON_IOTS_APP_SET_SWITCH_RESP, cb_param->str_arg[0], cb_param->req_id, -1);
+
+                char * send_buf = ws_construct_packet_data(handle->ws_handle, to_buf, &len);
+                debug_info("start send len %ld sockfd %d msg %s \n", len, app_sock_fd, to_buf);
+                if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, app_sock_fd))
+                {
+                    tcp_send(app_sock_fd, send_buf, len);
+                }
+                else
+                {
+                    debug_info("sockfd %d exit already \n", app_sock_fd);
+                }
             }
 
             break;

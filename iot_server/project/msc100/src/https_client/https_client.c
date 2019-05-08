@@ -305,7 +305,7 @@ int https_client_unit_test(void)
 		return read_len;
 	}
 
-	printf("==================== Recv [%d] ==================== \n", read_len);
+	printf("==================== Recv [%d] ====================  buff %s \n", read_len, buff);
 	printf("%s\n", buff);
 
 	return 1;
