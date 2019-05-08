@@ -118,6 +118,29 @@ void dev_param_set_sock_exit_cb(DEV_PARAM_HANDLE handle, sock_exit_callback cb, 
     }
 }
 
+int dev_param_sock_fd_is_exist(DEV_PARAM_HANDLE handle, int sock_fd)
+{
+    int ret = 0;
+    SOCK_FD_NODE * sock_node = NULL;
+    struct list_head *pos = NULL;
+    struct list_head *n   = NULL;
+
+    list_for_each_safe(pos, n, &handle->sock_fd_head)
+    {
+        sock_node = list_entry(pos, SOCK_FD_NODE, list);
+        if (NULL != sock_node)
+        {
+            if (sock_fd == sock_node->sock_fd)
+            {
+                ret = 1;
+                break;
+            }
+        }
+    }
+
+    return ret;
+}
+
 void dev_param_get_proxy_server_addr(DEV_PARAM_HANDLE handle, char *ip, int len)
 {
     strncpy(ip, (char *)PROXY_SERVER_IP, len);
@@ -229,10 +252,15 @@ int dev_param_register(DEV_PARAM_HANDLE handle, char *cc_id, int hash_value, int
         debug_info("add cc_id %s:%d:%d successful \n", cc_id, hash_value, sock_fd);
     }
 
+    if (0 == dev_param_heart_beat(handle, cc_id, sock_fd))
+    {
+        debug_info("cc_id %s sock_fd %d heart beat \n", cc_id, sock_fd);
+    }
+
     return 0;
 }
 
-int dev_heart_beat(DEV_PARAM_HANDLE handle, char *cc_id)
+int dev_param_heart_beat(DEV_PARAM_HANDLE handle, char *cc_id, int sock_fd)
 {
     if ((strlen(cc_id) > MAX_ID_LEN) || (0 == strlen(cc_id)))
     {
@@ -259,6 +287,38 @@ int dev_heart_beat(DEV_PARAM_HANDLE handle, char *cc_id)
     {
         debug_info("cc_id:%s unexist \n", cc_id);
         return -1;
+    }
+
+    if (0 == dev_param_sock_fd_is_exist(handle, sock_fd))
+    {
+        SOCK_FD_NODE * sock_node = NULL;
+        sock_node = (SOCK_FD_NODE *)calloc(1, sizeof(SOCK_FD_NODE));
+        if (NULL == sock_node)
+        {
+            debug_error("not enough memory \n");
+            return -1;
+        }
+        pthread_mutex_lock(&handle->mutex);
+        sock_node->sock_fd  = sock_fd;
+        sock_node->next_sec = get_real_time_sec() + TCP_TIMEOUT;
+        pthread_mutex_unlock(&handle->mutex);
+
+        list_add_tail(&sock_node->list, &handle->sock_fd_head);
+    }
+    else
+    {
+        SOCK_FD_NODE * sock_node = NULL;
+        struct list_head *pos = NULL;
+        struct list_head *n   = NULL;
+
+        list_for_each_safe(pos, n, &handle->sock_fd_head)
+        {
+            sock_node = list_entry(pos, SOCK_FD_NODE, list);
+            if (NULL != sock_node)
+            {
+                sock_node->next_sec = get_real_time_sec() + TCP_TIMEOUT;
+            }
+        }
     }
 
     return 0;

@@ -186,7 +186,7 @@ void dev_mgr_destroy(DEV_MGR_HANDLE handle)
 static void dev_thread_center(long param)
 {
     char peer_ip[16];
-    char resp_buf[256];
+    //char resp_buf[256];
 
     unsigned short peer_port;
     char   recv_buf[MAX_MSG_LEN];
@@ -427,7 +427,8 @@ static int json_msg_fn(void * arg, MSG_CB_PARAM * cb_param, void * ext_arg)
         }
         case E_DEV_HEART_BEAT:
         {
-            dev_heart_beat(handle->hdev_param, cb_param->cc_uuid);
+            int sock_fd = *(int *)ext_arg;
+            dev_param_heart_beat(handle->hdev_param, cb_param->cc_uuid, sock_fd);
             break;
         }
         case E_DEV_INFORM_STATUS:

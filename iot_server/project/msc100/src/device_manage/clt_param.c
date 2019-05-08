@@ -212,6 +212,38 @@ int clt_param_heart_beat(CLT_PARAM_HANDLE handle, char *gopenid, int sock_fd)
         }
     }
 
+    if (0 == clt_param_sock_fd_is_exist(handle, sock_fd))
+    {
+        SOCK_FD_NODE * sock_node = NULL;
+        sock_node = (SOCK_FD_NODE *)calloc(1, sizeof(SOCK_FD_NODE));
+        if (NULL == sock_node)
+        {
+            debug_error("not enough memory \n");
+            return -1;
+        }
+        pthread_mutex_lock(&handle->mutex);
+        sock_node->sock_fd  = sock_fd;
+        sock_node->next_sec = get_real_time_sec() + TCP_TIMEOUT;
+        pthread_mutex_unlock(&handle->mutex);
+
+        list_add_tail(&sock_node->list, &handle->sock_fd_head);
+    }
+    else
+    {
+        SOCK_FD_NODE * sock_node = NULL;
+        struct list_head *pos = NULL;
+        struct list_head *n   = NULL;
+
+        list_for_each_safe(pos, n, &handle->sock_fd_head)
+        {
+            sock_node = list_entry(pos, SOCK_FD_NODE, list);
+            if (NULL != sock_node)
+            {
+                sock_node->next_sec = get_real_time_sec() + TCP_TIMEOUT;
+            }
+        }
+    }
+
     return 0;
 }
 
