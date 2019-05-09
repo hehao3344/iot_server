@@ -58,6 +58,8 @@ DEV_PARAM_HANDLE dev_param_create(int max_dev_count)
     }
 
     id_mgr_add_device(handle->hid_mgr, "10001122334455");
+    id_mgr_add_device(handle->hid_mgr, "1084f3eb83a7aa");
+
 
     handle->hcc_id = create_hashtable(max_dev_count, common_tbl_to_hash, common_tbl_keys_equal_func);
     INIT_LIST_HEAD(&handle->head);

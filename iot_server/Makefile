@@ -48,7 +48,8 @@ post_build: $(OBJS_DIR)/project/$(PROJECT_CFG)/src/main.o
 	@$(MKDIR) $(WEBS_BIN_DIR)/linux
 	@$(MKDIR) $(OUT_DIR)/linux
 	@$(CP) project/$(PROJECT_CFG)/src/libwebsockets/lib/libwebsockets.a $(LIB_DIR)/ -rf
-	@$(CXX) -o $(EXEC_NAME) -lproject -lframework -lwebsockets -lssl -lcrypto $(LDFLAGS)
+	@$(CXX) -o $(EXEC_NAME) -lproject -lframework -lwebsockets $(LDFLAGS)
+#	@$(CXX) -o $(EXEC_NAME) -lproject -lframework -lwebsockets -lssl -lcrypto $(LDFLAGS)
 	@$(CROSS_COMPILE)strip $(EXEC_NAME)
 #	@$(CP) $(EXEC_NAME)   /share/romfs/usr/bin/webs/linux/
 
