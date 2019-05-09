@@ -6,8 +6,7 @@ extern "C"
 {
 #endif
 
-#define TCP_TIMEOUT     20
-
+#define TCP_TIMEOUT     (20)
 #define TYPE            (0x9C)
 
 extern long g_lCryptTable[];

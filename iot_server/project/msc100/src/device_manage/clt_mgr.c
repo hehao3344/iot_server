@@ -366,6 +366,7 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
             int sock_fd = *(int *)ext_arg;
             char cc_uuid[20] = {0}; // MAX_ID_LEN 16
             char to_app_buf[512];
+            int  success_flags = 0;
             if (0 == clt_param_get_dev_uuid_by_openid(handle->hclt_param, cb_param->gopenid, cc_uuid, sizeof(cc_uuid)))
             {
                 debug_info("get dev_uuid: %s \n", cc_uuid);
@@ -373,43 +374,35 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
                 memset(&sub_node, 0, sizeof(SUB_DEV_NODE));
                 if (0 == dev_param_get_sub_dev_node(handle->hdev_param, cc_uuid, &sub_node))
                 {
-                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_PARAM_RESP, cc_uuid,
-                             0, 0, "01", "off",  "02", "off", "03", "on", "04", "on");
-                }
-                else
-                {
-                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_PARAM_RESP, cc_uuid,
-                             0, 0, "01", "off",  "02", "off", "03", "on", "04", "on");
-                }
-                char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
-                debug_info("start send len %ld sockfd %d \n", len, sock_fd);
+                    debug_info("get sub_node %s:%d-%d %s:%d-%d %s:%d-%d %s:%d-%d \n", sub_node.id[0], sub_node.on_off[0], sub_node.on_line[0],
+                                sub_node.id[1], sub_node.on_off[1], sub_node.on_line[1],
+                                    sub_node.id[2], sub_node.on_off[2], sub_node.on_line[2],
+                                        sub_node.id[3], sub_node.on_off[3], sub_node.on_line[3]);
+                    success_flags = 1;
+                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_PARAM_RESP, cc_uuid,  0, 0,
+                              sub_node.id[0], (0 == sub_node.on_line[0]) ? "unknown" : (1 ==  sub_node.on_off[0]) ? "on" : "off",
+                                 sub_node.id[1], (0 == sub_node.on_line[1]) ? "unknown" : (1 ==  sub_node.on_off[1]) ? "on" : "off",
+                                    sub_node.id[2], (0 == sub_node.on_line[2]) ? "unknown" : (1 ==  sub_node.on_off[2]) ? "on" : "off",
+                                        sub_node.id[3], (0 == sub_node.on_line[3]) ? "unknown" : (1 ==  sub_node.on_off[3]) ? "on" : "off");
 
-                if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
-                {
-                    tcp_send(sock_fd, send_buf, len);
-                }
-                else
-                {
-                    debug_info("sockfd %d exist already \n", sock_fd);
+                    char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
+                    debug_info("start send len %ld sockfd %d \n", len, sock_fd);
+
+                    if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
+                    {
+                        tcp_send(sock_fd, send_buf, len);
+                    }
+                    else
+                    {
+                        debug_info("sockfd %d exit already \n", sock_fd);
+                    }
                 }
             }
-            else
-            {
-                 debug_error("can't find uuid of openid: %s \n", cb_param->gopenid);
 
-                debug_error("get dev_uuid: %s \n", cc_uuid);
-                SUB_DEV_NODE sub_node;
-                memset(&sub_node, 0, sizeof(SUB_DEV_NODE));
-                if (0 == dev_param_get_sub_dev_node(handle->hdev_param, cc_uuid, &sub_node))
-                {
-                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_PARAM_RESP, cc_uuid,
-                             0, 0, "01", "known",  "02", "off", "03", "on", "04", "on");
-                }
-                else
-                {
-                    snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_PARAM_RESP, cc_uuid,
-                             0, 0, "01", "known",  "02", "off", "03", "on", "04", "on");
-                }
+            if (0 == success_flags)
+            {
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_PARAM_RESP, cc_uuid,
+                         0, -1, "unknown", "unknown",  "unknown", "unknown", "unknown", "unknown", "unknown", "unknown");
                 char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
                 debug_info("start send len %ld sockfd %d \n", len, sock_fd);
 
@@ -419,7 +412,7 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
                 }
                 else
                 {
-                    debug_info("sockfd %d exist already \n", sock_fd);
+                    debug_info("sockfd %d exit already \n", sock_fd);
                 }
             }
 
