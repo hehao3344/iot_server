@@ -386,7 +386,7 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
                                         sub_node.id[3], (0 == sub_node.on_line[3]) ? "unknown" : (1 ==  sub_node.on_off[3]) ? "on" : "off");
 
                     char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
-                    debug_info("start send len %ld sockfd %d \n", len, sock_fd);
+                    debug_info("start send msg: %s len %ld sockfd %d \n", to_app_buf, len, sock_fd);
 
                     if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
                     {
