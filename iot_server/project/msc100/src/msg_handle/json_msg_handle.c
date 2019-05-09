@@ -75,16 +75,12 @@ int json_msg_handle_msg(JMH_HANDLE handle, char * buffer, int len, char * resp_b
     method_obj = cJSON_GetObjectItem(root, "method");
     if ((NULL != attr_obj) && (NULL != method_obj))
     {
-        debug_info("==== [%s] !\n", attr_obj->valuestring);
         cmd_obj = cJSON_GetObjectItem(attr_obj, "cmd");
         if (NULL != cmd_obj)
         {
-            debug_info("==== [%s] !\n", cmd_obj->valuestring);
             int i;
             for (i=0; i<ARRAY_SIZE(json_handle_tbl); i++)
             {
-                debug_info("==== [%s] !\n", cmd_obj->valuestring);
-
                 if ((0 == strcmp(json_handle_tbl[i].method, method_obj->valuestring)) &&
                     (0 == strcmp(json_handle_tbl[i].cmd, cmd_obj->valuestring)))
                 {

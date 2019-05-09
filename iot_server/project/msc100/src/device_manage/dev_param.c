@@ -434,17 +434,12 @@ int dev_param_get_sub_dev_node(DEV_PARAM_HANDLE handle, char *cc_id, SUB_DEV_NOD
         if ((NULL != gw_dev_list) && (0 == strcmp(cc_id, gw_dev_list->cc_id)))
         {
             pthread_mutex_lock(&handle->mutex);
-            memcpy(&sub_dev_node, &gw_dev_list->sub_dev, sizeof(SUB_DEV_NODE));
+            memcpy(sub_dev_node, &gw_dev_list->sub_dev, sizeof(SUB_DEV_NODE));
             pthread_mutex_unlock(&handle->mutex);
             ret = 0;
             break;
         }
     }
-
-	if (0 != hashtable_remove(handle->hcc_id, cc_id))
-	{
-		debug_info("hashtable_remove failed \n");
-	}
 
 	return ret;
 }

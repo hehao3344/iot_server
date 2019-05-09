@@ -43,7 +43,6 @@ COM_PROJECT_SRC =  \
                 $(PROJECT_MSGH_DIR)/json_msg_handle.c \
                 $(PROJECT_MSGH_DIR)/json_msg_clt.c \
                 $(PROJECT_DEVMGR_DIR)/common_tbl.c \
-                $(PROJECT_HTTPS_C_DIR)/https_client.c \
                 $(PROJECT_SRC_DIR)/main.cpp
 
 # Local include directory
