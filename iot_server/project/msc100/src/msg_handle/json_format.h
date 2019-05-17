@@ -7,6 +7,13 @@ extern "C"
 #endif
 
 // 小程序 服务器
+#define  JSON_IOTS_APP_BIND_RESP "{\
+\"method\":\"down_msg\",\
+\"open_id\":\"%s\",\
+\"req_id\":%d,\
+\"code\":%d\
+}"
+
 #define  JSON_IOTS_APP_GET_PARAM_RESP "{\
 \"method\":\"down_msg\",\
 \"dev_uuid\":\"%s\",\

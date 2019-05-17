@@ -145,6 +145,45 @@ int id_mgr_add_group_openid(ID_MGR_HANDLE handle, char *id, char * openid)
     return ret;
 }
 
+
+int id_mgr_del_group_openid(ID_MGR_HANDLE handle, char *id)
+{
+    int ret    = -1;
+    int result = 0;
+    char * errmsg = NULL;
+    char  sq_cmd[256];
+
+    /* 如果设备不存在则返回 */
+    if (0 == device_is_exist(handle, id))
+    {
+        debug_error("id %s un-exist \n", id);
+        return -1;
+    }
+    else
+    {
+        // insert
+        memset(sq_cmd, 0, sizeof(sq_cmd));
+
+        sprintf(sq_cmd, "update id_table set gopenid='%s' where dev_uuid = '%s'", "null", id);
+
+        pthread_mutex_lock(&handle->mutex);
+        result = sqlite3_exec(handle->id_db, sq_cmd, 0, 0, &errmsg);
+        pthread_mutex_unlock(&handle->mutex);
+
+        if (SQLITE_OK == result)
+        {
+            debug_print("insert dev: %s openid:%s success \n", id, "null");
+            ret = 0;
+        }
+        else
+        {
+            debug_error("insert dev: %s openid:%s failed \n", id, "null");
+        }
+    }
+
+    return ret;
+}
+
 int id_mgr_get_uuid_by_group_openid(ID_MGR_HANDLE handle, char * openid, char * buf, int buf_len)
 {
     int ret    = -1;
