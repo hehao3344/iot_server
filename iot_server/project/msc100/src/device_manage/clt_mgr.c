@@ -361,6 +361,48 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
     debug_info("json callback called cmd 0x%x app_id %s\n", cb_param->e_msg, cb_param->gopenid);
     switch(cb_param->e_msg)
     {
+
+        case E_DEV_GET_BIND:
+        {
+            int sock_fd = *(int *)ext_arg;
+            char cc_uuid[20] = {0}; // MAX_ID_LEN 16
+            char to_app_buf[512] = {0};
+            int  success_flags = 0;
+            if (0 == clt_param_get_dev_uuid_by_openid(handle->hclt_param, cb_param->gopenid, cc_uuid, sizeof(cc_uuid)))
+            {
+                debug_info("get dev_uuid: %s \n", cc_uuid);
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_BIND_RESP, cc_uuid, cb_param->req_id, 0);
+                success_flags = 1;
+                char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
+                debug_info("start send msg: %s len %ld sockfd %d \n", to_app_buf, len, sock_fd);
+
+                if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
+                {
+                    tcp_send(sock_fd, send_buf, len);
+                }
+                else
+                {
+                    debug_info("sockfd %d exit already \n", sock_fd);
+                }
+            }
+
+            if (0 == success_flags)
+            {
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_BIND_RESP, "unknown", cb_param->req_id, -1);
+                char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
+                debug_info("start send len %ld sockfd %d \n", len, sock_fd);
+                if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
+                {
+                    tcp_send(sock_fd, send_buf, len);
+                }
+                else
+                {
+                    debug_info("sockfd %d exit already \n", sock_fd);
+                }
+            }
+
+            break;
+        }
         case E_DEV_BIND:
         {
 

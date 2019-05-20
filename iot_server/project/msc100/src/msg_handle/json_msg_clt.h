@@ -13,6 +13,7 @@ extern "C"
 typedef enum
 {
     E_DEV_BIND  = 0x01,     /* APP绑定CC */
+    E_DEV_GET_BIND,         /* APP查询绑定结果 */
     E_DEV_GET_PARAM,        /* 获取参数 */
     E_DEV_HEART_BEAT,       /* 心跳 */
     E_DEV_SET_SWITCH,       /* 设置插座 */
