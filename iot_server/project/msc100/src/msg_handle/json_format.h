@@ -22,6 +22,13 @@ extern "C"
 \"code\":%d\
 }"
 
+#define  JSON_IOTS_APP_UNBIND_RESP "{\
+\"method\":\"down_msg\",\
+\"open_id\":\"%s\",\
+\"req_id\":%d,\
+\"code\":%d\
+}"
+
 #define  JSON_IOTS_APP_GET_PARAM_RESP "{\
 \"method\":\"down_msg\",\
 \"dev_uuid\":\"%s\",\

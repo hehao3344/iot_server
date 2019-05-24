@@ -436,6 +436,42 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
             }
             break;
         }
+        case E_DEV_UNBIND:
+        {
+
+            int sock_fd = *(int *)ext_arg;
+            char to_app_buf[256];
+            int  success_flags = 0;
+            debug_info("unbinding dev:%s openid:%s \n", cb_param->str_arg[0], cb_param->gopenid);
+
+            /* 把dev_uuid相关联的openID全部设置为null */
+            if (0 == clt_param_unbind(handle->hclt_param, cb_param->str_arg[0]))
+            {
+                debug_info("unbind successful \n");
+                clt_param_remove(handle->hclt_param, cb_param->gopenid);
+                success_flags = 1;
+            }
+
+            if (1 == success_flags)
+            {
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_UNBIND_RESP, cb_param->gopenid, cb_param->req_id, 0);
+            }
+            else
+            {
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_UNBIND_RESP, cb_param->gopenid, cb_param->req_id, -1);
+            }
+            char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
+            debug_info("start send len %ld sockfd %d msg %s \n", len, sock_fd, to_app_buf);
+            if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
+            {
+                tcp_send(sock_fd, send_buf, len);
+            }
+            else
+            {
+                debug_info("sockfd %d exit already \n", sock_fd);
+            }
+            break;
+        }
         case E_DEV_GET_PARAM:
         {
             int sock_fd = *(int *)ext_arg;

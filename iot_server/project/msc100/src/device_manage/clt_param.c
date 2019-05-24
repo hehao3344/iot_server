@@ -147,6 +147,17 @@ int clt_param_bind(CLT_PARAM_HANDLE handle,  char * dev_uuid, char * openid)
     return id_mgr_add_group_openid(handle->hid_mgr, dev_uuid, openid);
 }
 
+int clt_param_unbind(CLT_PARAM_HANDLE handle,  char * openid)
+{
+    if ((NULL == handle) || (NULL == openid))
+    {
+        debug_error("invalid param \n");
+        return -1;
+    }
+
+    return id_mgr_del_group_openid(handle->hid_mgr, openid);
+}
+
 int clt_param_get_dev_uuid_by_openid(CLT_PARAM_HANDLE handle, char * openid, char * buf, int buf_len)
 {
     return id_mgr_get_uuid_by_group_openid(handle->hid_mgr, openid, buf, buf_len);
