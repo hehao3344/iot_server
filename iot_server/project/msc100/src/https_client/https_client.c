@@ -1,17 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <core/core.h>
-
-#include <core/core.h>
-/************************************************************************
-    > File Name: https_post.c
-    > Author: WangMinghang
-    > Mail: hackxiaowang@qq.com
-    > Blog: https://www.wangsansan.com
-    > Created Time: 2018年08月29日 星期三 16时42分21秒
- ***********************************************************************/
-
 #include <fcntl.h>
 #include <netdb.h>
 #include <stdio.h>
@@ -26,288 +15,263 @@
 #include <openssl/rand.h>
 #include <openssl/crypto.h>
 
+#include <core/core.h>
+
 #include "https_client.h"
 
-#define HTTP_HEADERS_MAXLEN 	512 	// Headers 的最大长度
+#define HTTP_HEADERS_MAXLEN     512     // Headers 的最大长度
+#define POST_DATA_MAXLEN        512     // post data 的最大长度
 
-/*
- * Headers 按需更改
- */
-const char *HttpsPostHeaders = "User-Agent: Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)\r\n"
-								"Cache-Control: no-cache\r\n"
-								"Accept: */*\r\n"
-								"Content-type: application/json\r\n";
+const char *https_post_headers = "User-Agent: Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)\r\n"
+                                 "Cache-Control: no-cache\r\n"
+                                 "Accept: */*\r\n"
+                                 "Content-type: application/json\r\n";
 
-/*
- * @Name 			- 创建TCP连接, 并建立到连接
- * @Parame *server 	- 字符串, 要连接的服务器地址, 可以为域名, 也可以为IP地址
- * @Parame 	port 	- 端口
- *
- * @return 			- 返回对应sock操作句柄, 用于控制后续通信
- */
-int client_connect_tcp(char *server, int port)
+static char post_buf[1024];
+static char sdata_buf[HTTP_HEADERS_MAXLEN+POST_DATA_MAXLEN];
+
+static int client_connect_tcp(char *server, int port);
+static int post_pack(const char *host, int port, const char *page, int len, const char *content, char *data, int data_buf_len);
+static SSL *ssl_init(int sockfd);
+static int ssl_send(SSL *ssl, const char *data, int size);
+static int ssl_recv(SSL *ssl, char *buff, int size);
+
+int https_clt_post(char *host, int port, char *url, const char *data, int dsize, char *buff, int bsize)
 {
-	int sockfd;
-	struct hostent *host;
-	struct sockaddr_in cliaddr;
+    SSL *ssl = NULL;
+    int re = 0;
+    int sockfd;
+    int data_len = 0;
 
-	sockfd=socket(AF_INET,SOCK_STREAM,0);
-	if(sockfd < 0){
-		perror("create socket error");
-		return -1;
-	}
+    if (dsize >= POST_DATA_MAXLEN)
+    {
+        debug_error("invalid param data len %d \n", bsize);
+        return -1;
+    }
+    char *sdata = sdata_buf;
+    sockfd = client_connect_tcp(host, port);
+    if (sockfd < 0)
+    {
+        debug_error("client_connect_tcp failed \n");
+        return -1;
+    }
 
-	if(!(host=gethostbyname(server))){
-		printf("gethostbyname(%s) error!\n", server);
-		return -2;
-	}
+    ssl = ssl_init(sockfd);
+    if (ssl == NULL)
+    {
+        close(sockfd);
+        return -1;
+    }
+    int sdata_len = (int)sizeof(sdata_buf);
 
-	bzero(&cliaddr,sizeof(struct sockaddr));
-	cliaddr.sin_family=AF_INET;
-	cliaddr.sin_port=htons(port);
-	cliaddr.sin_addr=*((struct in_addr *)host->h_addr);
+    data_len = post_pack(host, port, url, dsize, data, sdata, sdata_len);
+    re = ssl_send(ssl, sdata, data_len);
+    if (re < 0)
+    {
+        close(sockfd);
+        SSL_shutdown(ssl);
+        debug_error("ssl_send failed \n");
+        return -1;
+    }
 
-	if(connect(sockfd,(struct sockaddr *)&cliaddr,sizeof(struct sockaddr))<0){
-		perror("[-] error");
-		return -3;
-	}
+    int r_len = 0;
+    r_len = ssl_recv(ssl, buff, bsize);
+    if (r_len < 0)
+    {
+        close(sockfd);
+        SSL_shutdown(ssl);
+        debug_error("ssl_recv failed \n");
+        return -1;
+    }
+    close(sockfd);
+    SSL_shutdown(ssl);
+    ERR_free_strings();
 
-	return(sockfd);
+    return r_len;
 }
 
-/*
- * @Name 			- 封装post数据包括headers
- * @parame *host 	- 主机地址, 域名
- * @parame  port 	- 端口号
- * @parame 	page 	- url相对路径
- * @parame 	len 	- 数据内容的长度
- * @parame 	content - 数据内容
- * @parame 	data 	- 得到封装的数据结果
- *
- * @return 	int 	- 返回封装得到的数据长度
- */
-int post_pack(const char *host, int port, const char *page, int len, const char *content, char *data)
+static int ssl_recv(SSL *ssl, char *buff, int size)
 {
-	int re_len = strlen(page) + strlen(host) + strlen(HttpsPostHeaders) + len + HTTP_HEADERS_MAXLEN;
+    int i = 0;
+    int len = 0;
+    char headers[HTTP_HEADERS_MAXLEN];
+    if (ssl == NULL)
+    {
+        debug_error("invalid param \n");
+        return -1;
+    }
 
-	char *post = NULL;
-	post = malloc(re_len);
-	if(post == NULL){
-		return -1;
-	}
+    memset(headers, 0, sizeof(headers));
+    // Headers以换行结束, 此处判断头是否传输完成
+    while((len = SSL_read(ssl, headers, 1)) == 1)
+    {
+        if (i < 4)
+        {
+            if (headers[0] == '\r' || headers[0] == '\n')
+            {
+                i++;
+                if ( i >= 4)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                i = 0;
+            }
+        }
+    }
 
-	sprintf(post, "POST %s HTTP/1.0\r\n", page);
-	sprintf(post, "%sHost: %s:%d\r\n",post, host, port);
-	sprintf(post, "%s%s", post, HttpsPostHeaders);
-	sprintf(post, "%sContent-Length: %d\r\n\r\n", post, len);
-	sprintf(post, "%s%s", post, content); 		// 此处需要修改, 当业务需要上传非字符串数据的时候, 会造成数据传输丢失或失败
+    len = SSL_read(ssl, buff, size);
 
-	re_len = strlen(post);
-	memset(data, 0, re_len+1);
-	memcpy(data, post, re_len);
-
-	free(post);
-	return re_len;
+    return len;
 }
 
-/*
- * @Name 		- 	初始化SSL, 并且绑定sockfd到SSL
- * 					此作用主要目的是通过SSL来操作sock
- *
- * @return 		- 	返回已完成初始化并绑定对应sockfd的SSL指针
- */
-SSL *ssl_init(int sockfd)
+
+static int ssl_send(SSL *ssl, const char *data, int size)
 {
-	int re = 0;
-	SSL *ssl;
-	SSL_CTX *ctx;
+    int ret = 0;
+    int count = 0;
 
-	SSL_library_init();
-	SSL_load_error_strings();
-	ctx = SSL_CTX_new(SSLv23_client_method());
-	if (ctx == NULL){
-		return NULL;
-	}
+    ret = SSL_connect(ssl);
+    if (1 != ret)
+    {
+        debug_error("SSL_connect failed \n");
+        return -1;
+    }
 
-	ssl = SSL_new(ctx);
-	if (ssl == NULL){
-		return NULL;
-	}
+    while (count < size)
+    {
+        ret = SSL_write(ssl, data+count, size-count);
+        if (ret == -1)
+        {
+            debug_error("SSL_write failed \n");
+            return -1;
+        }
+        count += ret;
+    }
 
-	/* 把socket和SSL关联 */
-	re = SSL_set_fd(ssl, sockfd);
-	if (re == 0){
-		SSL_free(ssl);
-		return NULL;
-	}
-
-    /*
-     * 经查阅, WIN32的系统下, 不能很有效的产生随机数, 此处增加随机数种子
-     */
-	RAND_poll();
-	while (RAND_status() == 0)
-	{
-		unsigned short rand_ret = rand() % 65536;
-		RAND_seed(&rand_ret, sizeof(rand_ret));
-	}
-
-	/*
-     * ctx使用完成, 进行释放
-     */
-	SSL_CTX_free(ctx);
-
-	return ssl;
+    return count;
 }
 
-/*
- * @Name 			- 通过SSL建立连接并发送数据
- * @Parame 	*ssl 	- SSL指针, 已经完成初始化并绑定了对应sock句柄的SSL指针
- * @Parame 	*data 	- 准备发送数据的指针地址
- * @Parame 	 size 	- 准备发送的数据长度
- *
- * @return 			- 返回发送完成的数据长度, 如果发送失败, 返回 -1
- */
-int ssl_send(SSL *ssl, const char *data, int size)
+static SSL *ssl_init(int sockfd)
 {
-	int re = 0;
-	int count = 0;
+    int ret = 0;
+    SSL *ssl;
+    SSL_CTX *ctx;
 
-	re = SSL_connect(ssl);
+    SSL_library_init();
+    SSL_load_error_strings();
+    ctx = SSL_CTX_new(SSLv23_client_method());
+    if (ctx == NULL)
+    {
+        debug_error("SSL_CTX_new failed \n");
+        return NULL;
+    }
 
-	if(re != 1){
-		return -1;
-	}
+    ssl = SSL_new(ctx);
+    if (ssl == NULL)
+    {
+        debug_error("SSL_new failed \n");
+        return NULL;
+    }
 
-	while(count < size)
-	{
-		re = SSL_write(ssl, data+count, size-count);
-		if(re == -1){
-			return -2;
-		}
-		count += re;
-	}
+    ret = SSL_set_fd(ssl, sockfd);
+    if (ret == 0)
+    {
+        SSL_free(ssl);
+        debug_error("SSL_set_fd failed \n");
+        return NULL;
+    }
 
-	return count;
+    RAND_poll();
+    while (RAND_status() == 0)
+    {
+        unsigned short rand_ret = rand() % 65536;
+        RAND_seed(&rand_ret, sizeof(rand_ret));
+    }
+
+    SSL_CTX_free(ctx);
+
+    return ssl;
 }
 
-/*
- * @Name 			- SSL接收数据, 需要已经建立连接
- * @Parame 	*ssl 	- SSL指针, 已经完成初始化并绑定了对应sock句柄的SSL指针
- * @Parame  *buff 	- 接收数据的缓冲区, 非空指针
- * @Parame 	 size 	- 准备接收的数据长度
- *
- * @return 			- 返回接收到的数据长度, 如果接收失败, 返回值 <0
- */
-int ssl_recv(SSL *ssl, char *buff, int size)
+static int client_connect_tcp(char *server, int port)
 {
-	int i = 0; 				// 读取数据取换行数量, 即判断headers是否结束
-	int re;
-	int len = 0;
-	char headers[HTTP_HEADERS_MAXLEN];
+    int sockfd;
+    struct hostent *host;
+    struct sockaddr_in cliaddr;
 
-	if(ssl == NULL){
-		return -1;
-	}
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+    {
+        debug_error("create socket error\n");
+        return -1;
+    }
 
-	// Headers以换行结束, 此处判断头是否传输完成
-	while((len = SSL_read(ssl, headers, 1)) == 1)
-	{
-		if(i < 4){
-			if(headers[0] == '\r' || headers[0] == '\n'){
-				i++;
-				if(i>=4){
-					break;
-				}
-			}else{
-				i = 0;
-			}
-		}
-		//printf("%c", headers[0]);		// 打印Headers
-	}
+    if (NULL == (host = gethostbyname(server)))
+    {
+        debug_error("gethostbyname(%s) error!\n", server);
+        return -1;
+    }
 
-	len = SSL_read(ssl, buff, size);
-	return len;
+    bzero(&cliaddr,sizeof(struct sockaddr));
+    cliaddr.sin_family=AF_INET;
+    cliaddr.sin_port=htons(port);
+    cliaddr.sin_addr=*((struct in_addr *)host->h_addr);
+
+    if (connect(sockfd, (struct sockaddr *)&cliaddr, sizeof(struct sockaddr)) < 0)
+    {
+        debug_error("connect error \n");
+        return -1;
+    }
+
+    return sockfd;
 }
 
-int https_post(char *host, int port, char *url, const char *data, int dsize, char *buff, int bsize)
+static int post_pack(const char *host, int port, const char *page, int len, const char *content, char *data, int data_buf_len)
 {
-	SSL *ssl;
-	int re = 0;
-	int sockfd;
-	int data_len = 0;
-	int ssize = dsize + HTTP_HEADERS_MAXLEN; 	// 欲发送的数据包大小
+    int re_len = 0;
+    int ret = -1;
+    memset(post_buf, 0, sizeof(post_buf));
 
-	char *sdata = malloc(ssize);
-	if(sdata == NULL){
-		return -1;
-	}
+    sprintf(post_buf, "POST %s HTTP/1.0\r\n", page);
+    sprintf(post_buf, "%sHost: %s:%d\r\n", post_buf, host, port);
+    sprintf(post_buf, "%s%s", post_buf, https_post_headers);
+    sprintf(post_buf, "%sContent-Length: %d\r\n\r\n", post_buf, len);
+    sprintf(post_buf, "%s%s", post_buf, content);       // 此处需要修改, 当业务需要上传非字符串数据的时候, 会造成数据传输丢失或失败
 
-	// 1、建立TCP连接
-	sockfd = client_connect_tcp(host, port);
-	if(sockfd < 0){
-		free(sdata);
-		return -2;
-	}
+    re_len = strlen(post_buf);
+    if (data_buf_len > re_len+1)
+    {
+        memset(data, 0, data_buf_len);
+        memcpy(data, post_buf, re_len);
+        ret = re_len;
+    }
 
-	// 2、SSL初始化, 关联Socket到SSL
-	ssl = ssl_init(sockfd);
-	if(ssl == NULL){
-		free(sdata);
-		close(sockfd);
-		return -3;
-	}
-
-	// 3、组合POST数据
-	data_len = post_pack(host, port, url, dsize, data, sdata);
-
-	// 4、通过SSL发送数据
-	re = ssl_send(ssl, sdata, data_len);
-	if(re < 0){
-		free(sdata);
-		close(sockfd);
-		SSL_shutdown(ssl);
-		return -4;
-	}
-
-	// 5、取回数据
-	int r_len = 0;
-	r_len = ssl_recv(ssl, buff, bsize);
-	if(r_len < 0){
-		free(sdata);
-		close(sockfd);
-		SSL_shutdown(ssl);
-		return -5;
-	}
-
-	// 6、关闭会话, 释放内存
-	free(sdata);
-	close(sockfd);
-	SSL_shutdown(ssl);
-	ERR_free_strings();
-
-	return r_len;
+    return ret;
 }
 
 //https://api.weixin.qq.com/sns/jscode2session?appid=wx4b02b7856ddaaf30&secret=8df65306d5813097bc6bbb00924370ba&js_code=023bHLaF0faidd2ApmbF0GhpaF0bHLaF&grant_type=authorization_code
 int Port = 443;
 char *Host = "api.weixin.qq.com";
 char *Page = "/sns/jscode2session?";
-char *Data = "appid=wx4b02b7856ddaaf30&secret=8df65306d5813097bc6bbb00924370ba&js_code=033bsfHH1g8iL108dAGH1EtmHH1bsfHF&grant_type=authorization_code"; 	// 对应字符串 - {"A":"111", "B":"222"}
+char *Data = "appid=wx4b02b7856ddaaf30&secret=8df65306d5813097bc6bbb00924370ba&js_code=033bsfHH1g8iL108dAGH1EtmHH1bsfHF&grant_type=authorization_code";     // 对应字符串 - {"A":"111", "B":"222"}
 
 int https_client_unit_test(void)
 {
-	int read_len = 0;
-	char buff[1024] = {0};
+    int read_len = 0;
+    char buff[1024] = {0};
 
-	read_len = https_post(Host, Port, Page, Data, strlen(Data), buff, 512);
-	if(read_len < 0){
-		printf("Err = %d \n", read_len);
-		return read_len;
-	}
+    read_len = https_clt_post(Host, Port, Page, Data, strlen(Data), buff, 512);
+    if(read_len < 0){
+        printf("Err = %d \n", read_len);
+        return read_len;
+    }
 
-	printf("==================== Recv [%d] ====================  buff %s \n", read_len, buff);
-	printf("%s\n", buff);
+    printf("==================== Recv [%d] ====================  buff %s \n", read_len, buff);
+    printf("%s\n", buff);
 
-	return 1;
+    return 1;
 }
 
