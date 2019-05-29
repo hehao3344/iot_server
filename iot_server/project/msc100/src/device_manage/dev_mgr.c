@@ -361,6 +361,19 @@ static int json_msg_fn(void * arg, MSG_CB_PARAM * cb_param, void * ext_arg)
             int sock_fd = *(int *)ext_arg;
             int hash_value = (int)string_to_hash(cb_param->cc_uuid);
             dev_param_register(handle->hdev_param, cb_param->cc_uuid, hash_value, sock_fd);
+
+            /* only for test */
+            int i;
+            SUB_DEV_NODE sub_dev;
+            memset(&sub_dev, 0, sizeof(SUB_DEV_NODE));
+            for (i=0; i<MAX_ID_ARRAY; i++)
+            {
+                strncpy(sub_dev.id[i],  "00000001", sizeof(sub_dev.id[i]));
+                sub_dev.on_line[i] = 1;
+                sub_dev.on_off[i]  = 0;
+            }
+            dev_param_update(handle->hdev_param, cb_param->cc_uuid, &sub_dev);
+
             break;
         }
         case E_DEV_HEART_BEAT:
