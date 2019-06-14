@@ -158,6 +158,7 @@ int goahead_init(void)
      */
     websAddRoute("/", "file", 0);
 #endif
+
 #ifdef GOAHEAD_INIT
     /*
         Define your init function in main.me goahead.init, or
@@ -171,6 +172,7 @@ int goahead_init(void)
         }
     }
 #endif
+
 #if ME_UNIX_LIKE && !MACOSX
     /*
         Service events till terminated
@@ -182,13 +184,25 @@ int goahead_init(void)
         }
     }
 #endif
+
+
+#if 0
     websServiceEvents(&finished);
     logmsg(1, "Instructed to exit");
     websClose();
 #if WINDOWS
     windowsClose();
 #endif
+#endif
+
     return 0;
+}
+
+void goahead_eventloop(void)
+{
+    websServiceEvents(&finished);
+    logmsg(1, "Instructed to exit");
+    websClose();
 }
 
 static void logHeader(void)

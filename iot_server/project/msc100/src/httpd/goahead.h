@@ -28,7 +28,8 @@
 extern "C" {
 #endif
 
-int goahead_init(void);
+int  goahead_init(void);
+void goahead_eventloop(void);
 
 #if (ME_COM_MBEDTLS + ME_COM_MATRIXSSL + ME_COM_NANOSSL + ME_COM_OPENSSL) > 1
     #error "Cannot have more than one SSL provider configured"

@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     //openid_unit_test();
     goahead_init();
 
-    return 0;
+    //return 0;
 
     //websockets_unit_test();
 
@@ -53,6 +53,9 @@ int main(int argc, char** argv)
         debug_error("clt_mgr_create failed \n");
         return -1;
     }
+
+    debug_info("enter event loop \n");
+    goahead_eventloop();
 
     while(1)
     {

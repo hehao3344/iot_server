@@ -38,7 +38,7 @@ function winHide(tableId, parentId)
       <table width="180" height="40" border="0" cellpadding="0" cellspacing="0" bordercolor="#FFFFFF">
         <tr>
           <td height="20" align="left" id="cameraSet" style="cursor:pointer;" onClick="winHide('cameraSetTb','cameraSet');" name="cameraSet" target="mainFrame" onMouseOver="this.style.color='#d9d919';" onMouseOut="this.style.color='#ffffff';">            <span class="topTitle">
-            <div style="margin-top:0px; margin-bottom:0px; margin-left:36px"><img src="images/drop_menu.gif">基本配置</div>
+            <div style="margin-top:0px; margin-bottom:0px; margin-left:36px"><img src="/images/drop_menu.gif">基本配置</div>
             </span>
           </td>
         </tr>
