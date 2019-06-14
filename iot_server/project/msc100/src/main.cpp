@@ -4,7 +4,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-
 #include "log/debug_util.h"
 #include "log/msg_util.h"
 
@@ -16,13 +15,17 @@
 #include "https_client/openid.h"
 #include "db/dev_db_mgr.h"
 
+#include "httpd/goahead.h"
+
 int main(int argc, char** argv)
 {
     //debug_init(IOT_MODULE_IOT_SERVER, IOT_DEBUG_LEVEL_INFO, (char *)"iot_server");
 
     //https_client_unit_test();
     //openid_unit_test();
+    goahead_init();
 
+    return 0;
 
     //websockets_unit_test();
 

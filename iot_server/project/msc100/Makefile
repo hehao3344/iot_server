@@ -23,6 +23,7 @@ COM_OBJPATH_STATIC  = $(OBJS_DIR)/$(CUR_DIR)
 # Source code directory
 PROJECT_SRC_DIR       = src
 PROJECT_DEVMGR_DIR    = $(PROJECT_SRC_DIR)/device_manage
+PROJECT_HTTPD_DIR     = $(PROJECT_SRC_DIR)/httpd
 PROJECT_UDP_SVR_DIR   = $(PROJECT_SRC_DIR)/udp_server
 PROJECT_TCP_SVR_DIR   = $(PROJECT_SRC_DIR)/tcp_server
 PROJECT_HTTPS_C_DIR   = $(PROJECT_SRC_DIR)/https_client
@@ -32,6 +33,27 @@ PROJECT_MSGH_DIR      = $(PROJECT_SRC_DIR)/msg_handle
 # Component source
 ####################################################################################
 COM_PROJECT_SRC =  \
+                $(PROJECT_HTTPD_DIR)/action.c           \
+                $(PROJECT_HTTPD_DIR)/alloc.c            \
+                $(PROJECT_HTTPD_DIR)/auth.c             \
+                $(PROJECT_HTTPD_DIR)/cgi.c              \
+                $(PROJECT_HTTPD_DIR)/crypt.c            \
+                $(PROJECT_HTTPD_DIR)/file.c             \
+                $(PROJECT_HTTPD_DIR)/fs.c               \
+                $(PROJECT_HTTPD_DIR)/gbk_utf8.c         \
+                $(PROJECT_HTTPD_DIR)/goahead.c          \
+                $(PROJECT_HTTPD_DIR)/http.c             \
+                $(PROJECT_HTTPD_DIR)/js.c               \
+                $(PROJECT_HTTPD_DIR)/jst.c              \
+                $(PROJECT_HTTPD_DIR)/options.c          \
+                $(PROJECT_HTTPD_DIR)/osdep.c            \
+                $(PROJECT_HTTPD_DIR)/rom.c              \
+                $(PROJECT_HTTPD_DIR)/route.c            \
+                $(PROJECT_HTTPD_DIR)/runtime.c          \
+                $(PROJECT_HTTPD_DIR)/socket.c           \
+                $(PROJECT_HTTPD_DIR)/time.c             \
+                $(PROJECT_HTTPD_DIR)/upload.c           \
+                $(PROJECT_HTTPD_DIR)/goahead_apps.c     \
                 $(PROJECT_DEVMGR_DIR)/hash_table.c \
                 $(PROJECT_DEVMGR_DIR)/hash_table_itr.c \
                 $(PROJECT_DEVMGR_DIR)/hash_value.c \

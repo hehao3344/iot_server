@@ -550,7 +550,7 @@ int log_init_check()
     return 0;
 }
 
-int main(int argc, char *argv[])
+int logs_main(int argc, char *argv[])
 {
     LOG_MSG_QUEUE_S *pmsgQueue = NULL;
     IOT_MSG *pLogData = NULL;

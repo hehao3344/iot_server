@@ -1,0 +1,23 @@
+body {
+    background-color: #0071b6;background-color: #0071b6; font: normal 500% Helvetica, Arial, sans-serif;
+}
+
+a{
+    text-decoration: none; color: #ffffff
+}
+a:visited {
+    COLOR: #ffffff
+}
+a:hover {
+    COLOR: #d9d919
+}
+a:active {
+	COLOR: #d9d919
+}
+body,td,th {
+	color: #ffffff;
+}
+
+.top_item {
+    font-size: 2em
+}

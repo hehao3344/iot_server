@@ -1,0 +1,10 @@
+#
+#   auth.txt - Authorization data
+#
+
+role name=user abilities=view,person,
+role name=person abilities=breathe,
+role name=administrator abilities=user,manage,
+
+user name=hehao password=b62f1fd7ac52afa3247d9fa0758e4dcf roles=administrator
+user name=client password=ea1e086092d1c4b7f60935e3954dce29 roles=user

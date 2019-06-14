@@ -8,7 +8,7 @@
 
 #define MAX_ID_NUMBER                   (20000)
 
-#define CREATE_ID_STRING                "create table id_table(id integer primary key autoincrement, dev_uuid char(16), gopenid char(32), openid1 char(32), openid2 char(32), openid3 char(32))"
+#define CREATE_ID_STRING                "create table id_table(id integer primary key autoincrement, dev_uuid char(16), gopenid char(32), openid1 char(32), openid2 char(32), openid3 char(32), dev_name char(32), last_online_time char(24), last_offline_time char(24), online int)"
 #define CREATE_INDEX_ID_STRING          "create index id_index on id_table(dev_uuid)"
 
 typedef struct _ID_MGR_OBJECT
@@ -82,7 +82,7 @@ int id_mgr_add_device(ID_MGR_HANDLE handle, char *id)
     {
         // insert
         memset(sq_cmd, 0, sizeof(sq_cmd));
-        snprintf(sq_cmd, sizeof(sq_cmd), "insert into id_table(dev_uuid) values ('%s')", id);
+        snprintf(sq_cmd, sizeof(sq_cmd), "insert into id_table(dev_uuid, online) values ('%s', '%d')", id, 0);
 
         pthread_mutex_lock(&handle->mutex);
         result = sqlite3_exec(handle->id_db, sq_cmd, 0, 0, &errmsg);
@@ -145,6 +145,120 @@ int id_mgr_add_group_openid(ID_MGR_HANDLE handle, char *id, char * openid)
     return ret;
 }
 
+int id_mgr_update_dev_name(ID_MGR_HANDLE handle, char *id, char * dev_name)
+{
+    int ret    = -1;
+    int result = 0;
+    char * errmsg = NULL;
+    char  sq_cmd[256];
+
+    /* 如果设备不存在则返回 */
+    if (0 == device_is_exist(handle, id))
+    {
+        debug_error("id %s un-exist \n", id);
+        return -1;
+    }
+    else
+    {
+        // insert
+        memset(sq_cmd, 0, sizeof(sq_cmd));
+
+        sprintf(sq_cmd, "update id_table set dev_name='%s' where dev_uuid = '%s'", dev_name, id);
+
+        pthread_mutex_lock(&handle->mutex);
+        result = sqlite3_exec(handle->id_db, sq_cmd, 0, 0, &errmsg);
+        pthread_mutex_unlock(&handle->mutex);
+
+        if (SQLITE_OK == result)
+        {
+            debug_print("insert dev: %s dev_name:%s success \n", id, dev_name);
+            ret = 0;
+        }
+        else
+        {
+            debug_error("insert dev: %s dev_name:%s failed \n", id, dev_name);
+        }
+    }
+
+    return ret;
+}
+
+
+int id_mgr_update_online_time(ID_MGR_HANDLE handle, char *id, char * last_online_time)
+{
+    int ret    = -1;
+    int result = 0;
+    char * errmsg = NULL;
+    char  sq_cmd[256];
+
+    /* 如果设备不存在则返回 */
+    if (0 == device_is_exist(handle, id))
+    {
+        debug_error("id %s un-exist \n", id);
+        return -1;
+    }
+    else
+    {
+        // insert
+        memset(sq_cmd, 0, sizeof(sq_cmd));
+        sprintf(sq_cmd, "update id_table set last_online_time='%s', online='%d' where dev_uuid = '%s'", last_online_time, 1, id);
+
+        pthread_mutex_lock(&handle->mutex);
+        result = sqlite3_exec(handle->id_db, sq_cmd, 0, 0, &errmsg);
+        pthread_mutex_unlock(&handle->mutex);
+
+        if (SQLITE_OK == result)
+        {
+            debug_print("insert dev: %s last_online_time:%s success \n", id, last_online_time);
+            ret = 0;
+        }
+        else
+        {
+            debug_error("insert dev: %s last_online_time:%s failed \n", id, last_online_time);
+        }
+    }
+
+    return ret;
+}
+
+int id_mgr_update_offline_time(ID_MGR_HANDLE handle, char *id, char * last_offline_time)
+{
+    int ret    = -1;
+    int result = 0;
+    char * errmsg = NULL;
+    char  sq_cmd[256];
+
+    /* 如果设备不存在则返回 */
+    if (0 == device_is_exist(handle, id))
+    {
+        debug_error("id %s un-exist \n", id);
+        return -1;
+    }
+    else
+    {
+        // insert
+        memset(sq_cmd, 0, sizeof(sq_cmd));
+
+        // 开始上线 开始时间=结束时间
+        sprintf(sq_cmd, "update id_table set last_offline_time='%s', online='%d' where dev_uuid = '%s'", last_offline_time, 0, id);
+
+        pthread_mutex_lock(&handle->mutex);
+        result = sqlite3_exec(handle->id_db, sq_cmd, 0, 0, &errmsg);
+        pthread_mutex_unlock(&handle->mutex);
+
+        if (SQLITE_OK == result)
+        {
+            debug_print("insert dev: %s last_offline_time:%s success \n", id, last_offline_time);
+            ret = 0;
+        }
+        else
+        {
+            debug_error("insert dev: %s last_offline_time:%s failed \n", id, last_offline_time);
+        }
+    }
+
+    return ret;
+}
 
 int id_mgr_del_group_openid(ID_MGR_HANDLE handle, char *id)
 {
@@ -211,6 +325,152 @@ int id_mgr_get_uuid_by_group_openid(ID_MGR_HANDLE handle, char * openid, char * 
             else
             {
                 debug_error("get pad error %d %d %s \n", nRow, nColumn, dbResult[nRow] );
+            }
+        }
+    }
+
+    return ret;
+}
+
+int id_mgr_get_uuid(ID_MGR_HANDLE handle, got_callback fn_cb, void * arg)
+{
+    int ret    = -1;
+    int result = 0;
+    // int index  = 0;
+    char * errmsg = NULL;
+    char **dbResult;
+    int nRow, nColumn;
+    char sq_cmd[256];
+    int  id = 1;
+    char dev_uuid[16] = {0};
+    char openid[32] = {0};
+    char dev_name[32] = {0};
+    char last_online_time[24] = {0};
+    char last_offline_time[24] = {0};
+    int  online = 0;
+    memset(sq_cmd, 0, sizeof(sq_cmd));
+    //sprintf(sq_cmd, "select dev_uuid from id_table");
+    sprintf(sq_cmd, "select * from id_table");
+    result = sqlite3_get_table(handle->id_db, sq_cmd, &dbResult, &nRow, &nColumn, &errmsg );
+    if (SQLITE_OK == result)
+    {
+        // result store in dbResult[]
+        if ((nRow > 0) && (nColumn > 0))
+        {
+            int i, j;
+            int cur_index = nColumn;
+            // dbResult 的字段值是连续的，从第0索引到第 nColumn - 1索引都是字段名称，
+            // 从第 nColumn 索引开始，后面都是字段值，它把一个二维的表（传统的行列表示法）用一个扁平的形式来表示
+            for(i=0; i<nRow; i++)
+            {
+                memset(dev_uuid, 0, sizeof(dev_uuid));
+                memset(dev_name, 0, sizeof(dev_name));
+                memset(last_online_time, 0, sizeof(last_online_time));
+                memset(last_offline_time, 0, sizeof(last_offline_time));
+
+                for(j=0; j<nColumn; j++)
+                {
+                    //debug_info("get j=%d %s %s \n", j, dbResult[j], dbResult[cur_index]);
+                    if ((NULL == dbResult[cur_index]) || (0 == strlen(dbResult[cur_index])))
+                    {
+                        cur_index++;
+                        continue;
+                    }
+                    if (0 == strcmp(dbResult[j], "id"))
+                    {
+                        id = atoi(dbResult[cur_index]);
+                    }
+                    else if (0 == strcmp(dbResult[j], "dev_uuid"))
+                    {
+                        strncpy(dev_uuid, dbResult[cur_index], sizeof(dev_uuid));
+                    }
+                    else if (0 == strcmp(dbResult[j], "gopenid"))
+                    {
+                        strncpy(openid, dbResult[cur_index], sizeof(openid));
+                    }
+                    else if (0 == strcmp(dbResult[j], "dev_name"))
+                    {
+                        strncpy(dev_name, dbResult[cur_index], sizeof(dev_name));
+                    }
+                    else if (0 == strcmp(dbResult[j], "last_online_time"))
+                    {
+                        strncpy(last_online_time, dbResult[cur_index], sizeof(last_online_time));
+                    }
+                    else if (0 == strcmp(dbResult[j], "last_offline_time"))
+                    {
+                        strncpy(last_offline_time, dbResult[cur_index], sizeof(last_offline_time));
+                    }
+                    else if (0 == strcmp(dbResult[j], "online"))
+                    {
+                        online = atoi(dbResult[cur_index]);
+                    }
+
+                    cur_index++;
+                }
+                // debug_info("get nRow=%d nColumn=%d %d index = %d %s %s\n", nRow, nColumn, index, cur_index, dbResult[j], dbResult [cur_index]);
+                if (NULL != fn_cb)
+                {
+                    fn_cb(arg, id, dev_uuid, openid, dev_name, last_online_time, last_offline_time, online);
+                    ret = 0;
+                }
+#if 0
+                for(j=0; j<nColumn; j++)
+                {
+
+                    // debug_info("get nRow=%d nColumn=%d %d index = %d %s %s\n", nRow, nColumn, index, cur_index, dbResult[j], dbResult [cur_index]);
+                    if (NULL != fn_cb)
+                    {
+                        fn_cb(arg, index, dbResult[cur_index], "dev_name", "dev_time");
+
+                        debug_info("get %s %s \n", dbResult[j], dbResult[cur_index]);
+                        index++;
+                        ret = 0;
+                    }
+                    cur_index++;
+                }
+#endif
+            }
+        }
+    }
+
+    return ret;
+}
+
+
+int id_mgr_get_uuid_by_index(ID_MGR_HANDLE handle, int index, char * buf, int buf_len)
+{
+    int ret    = -1;
+    int result = 0;
+    char * errmsg = NULL;
+    char **dbResult;
+    int nRow, nColumn;
+    char sq_cmd[256];
+
+    memset(sq_cmd, 0, sizeof(sq_cmd));
+    sprintf(sq_cmd, "select dev_uuid from id_table");
+    result = sqlite3_get_table(handle->id_db, sq_cmd, &dbResult, &nRow, &nColumn, &errmsg );
+    if (SQLITE_OK == result)
+    {
+        // result store in dbResult[]
+        if ((nRow > 0) && (nColumn > 0))
+        {
+            int i, j;
+            int cur_index = nColumn;
+            // dbResult 的字段值是连续的，从第0索引到第 nColumn - 1索引都是字段名称，
+            // 从第 nColumn 索引开始，后面都是字段值，它把一个二维的表（传统的行列表示法）用一个扁平的形式来表示
+            for(i=0; i<nRow; i++)
+            {
+                if (index == i)
+                {
+                    for(j=0; j<nColumn; j++)
+                    {
+                        // debug_info("get nRow=%d nColumn=%d %d index = %d %s %s\n", nRow, nColumn, index, cur_index, dbResult[j], dbResult [cur_index]);
+                        strncpy(buf, dbResult[cur_index], buf_len-1);
+                    }
+                    ret = 0;
+                    break;
+                }
+                cur_index++;
             }
         }
     }

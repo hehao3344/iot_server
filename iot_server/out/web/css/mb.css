@@ -1,0 +1,18 @@
+body {
+    background-color: #FFFFFF; font: normal 100% Helvetica, Arial, sans-serif;
+}
+.title1 {
+    font-size: 2em; background-color: #C0C0C0;
+}
+.title2 {
+    font-size: 2em; background-color: #D0D0D0;
+}
+.item1 {
+    font-size: 1px
+}
+.item2 {
+    font-size: 32px
+}
+.item3 {
+    font-size: 1em
+}
