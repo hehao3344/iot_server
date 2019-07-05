@@ -1,0 +1,8 @@
+run_erl [362] Fri Jul  5 17:00:49 2019
+Args before exec of shell:
+run_erl [362] Fri Jul  5 17:00:49 2019
+argv[0] = sh
+run_erl [362] Fri Jul  5 17:00:49 2019
+argv[1] = -c
+run_erl [362] Fri Jul  5 17:00:49 2019
+argv[2] = exec "/data/hehao/work/testing/iowin/mqtt/emqx/bin/emqx" "console"

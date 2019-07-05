@@ -1,0 +1,7 @@
+{application,emqx_rule_engine,
+             [{description,"EMQ X Rule Engine"},
+              {vsn, "v3.1.0"},
+              {modules, ['emqx_rule_actions','emqx_rule_engine','emqx_rule_engine_api','emqx_rule_engine_app','emqx_rule_engine_cli','emqx_rule_engine_sup','emqx_rule_funcs','emqx_rule_maps','emqx_rule_registry','emqx_rule_runtime','emqx_rule_sqlparser','emqx_rule_validator']},
+              {registered,[emqx_rule_engine_sup,emqx_rule_registry]},
+              {applications,[kernel,stdlib,sqlparse]},
+              {mod,{emqx_rule_engine_app,[]}}]}.

@@ -1,0 +1,11 @@
+{application,emqx_auth_username,
+             [{description,"EMQ X Authentication with Username and Password"},
+              {vsn, "v3.1.0"},
+              {modules, ['emqx_auth_username','emqx_auth_username_api','emqx_auth_username_app','emqx_auth_username_cfg']},
+              {registered,[]},
+              {applications,[kernel,stdlib,clique]},
+              {mod,{emqx_auth_username_app,[]}},
+              {env,[]},
+              {licenses,["Apache-2.0"]},
+              {links,["Github",
+                      "https://github.com/emqx/emqx-auth-username"]}]}.

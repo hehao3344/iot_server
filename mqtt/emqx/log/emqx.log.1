@@ -1,0 +1,1836 @@
+2019-07-05 14:07:48.190 [error] Failed to start Ranch listener 'http:management' in ranch_tcp:listen([{cacerts,'...'},{key,'...'},{cert,'...'},{port,8080},{backlog,512},{send_timeout,15000},{send_timeout_close,true},{nodelay,true}]) for reason eaddrinuse (address already in use)
+2019-07-05 14:07:48.192 [error] supervisor: {<0.1633.0>,ranch_listener_sup}
+    errorContext: start_error
+    reason: {listen_error,'http:management',eaddrinuse}
+    offender: [{pid,undefined},
+               {id,ranch_acceptors_sup},
+               {mfargs,
+                   {ranch_acceptors_sup,start_link,
+                       ['http:management',ranch_tcp]}},
+               {restart_type,permanent},
+               {shutdown,infinity},
+               {child_type,supervisor}]
+2019-07-05 14:07:48.192 [error] crasher:
+    initial call: supervisor:ranch_acceptors_sup/1
+    pid: <0.1635.0>
+    registered_name: []
+    exception exit: {listen_error,'http:management',eaddrinuse}
+      in function  ranch_acceptors_sup:listen_error/5 (src/ranch_acceptors_sup.erl, line 66)
+      in call from ranch_acceptors_sup:init/1 (src/ranch_acceptors_sup.erl, line 44)
+      in call from supervisor:init/1 (supervisor.erl, line 295)
+      in call from gen_server:init_it/2 (gen_server.erl, line 374)
+      in call from gen_server:init_it/6 (gen_server.erl, line 342)
+    ancestors: [<0.1633.0>,ranch_sup,<0.1330.0>]
+    message_queue_len: 0
+    messages: []
+    links: [<0.1633.0>]
+    dictionary: [{logger,error_logger}]
+    trap_exit: true
+    status: running
+    heap_size: 4185
+    stack_size: 27
+    reductions: 28655
+  neighbours:
+2019-07-05 14:07:48.194 [error] crasher:
+    initial call: application_master:init/4
+    pid: <0.1630.0>
+    registered_name: []
+    exception exit: {bad_return,
+                        {{emqx_mgmt_app,start,[normal,[]]},
+                         {'EXIT',
+                             {{badmatch,{error,eaddrinuse}},
+                              [{minirest,start_http,3,
+                                   [{file,"src/minirest.erl"},{line,47}]},
+                               {lists,foreach,2,
+                                   [{file,"lists.erl"},{line,1338}]},
+                               {emqx_mgmt_app,start,2,
+                                   [{file,"src/emqx_mgmt_app.erl"},{line,27}]},
+                               {application_master,start_it_old,4,
+                                   [{file,"application_master.erl"},
+                                    {line,277}]}]}}}}
+      in function  application_master:init/4 (application_master.erl, line 138)
+    ancestors: [<0.1629.0>]
+    message_queue_len: 1
+    messages: [{'EXIT',<0.1631.0>,normal}]
+    links: [<0.1629.0>,<0.1247.0>]
+    dictionary: []
+    trap_exit: true
+    status: running
+    heap_size: 610
+    stack_size: 27
+    reductions: 216
+  neighbours:
+2019-07-05 14:07:48.204 [error] [Plugins] Load plugin emqx_management failed, cannot start plugin emqx_management for {bad_return,
+                                                                                       {{emqx_mgmt_app,
+                                                                                         start,
+                                                                                         [normal,
+                                                                                          []]},
+                                                                                        {'EXIT',
+                                                                                         {{badmatch,
+                                                                                           {error,
+                                                                                            eaddrinuse}},
+                                                                                          [{minirest,
+                                                                                            start_http,
+                                                                                            3,
+                                                                                            [{file,
+                                                                                              "src/minirest.erl"},
+                                                                                             {line,
+                                                                                              47}]},
+                                                                                           {lists,
+                                                                                            foreach,
+                                                                                            2,
+                                                                                            [{file,
+                                                                                              "lists.erl"},
+                                                                                             {line,
+                                                                                              1338}]},
+                                                                                           {emqx_mgmt_app,
+                                                                                            start,
+                                                                                            2,
+                                                                                            [{file,
+                                                                                              "src/emqx_mgmt_app.erl"},
+                                                                                             {line,
+                                                                                              27}]},
+                                                                                           {application_master,
+                                                                                            start_it_old,
+                                                                                            4,
+                                                                                            [{file,
+                                                                                              "application_master.erl"},
+                                                                                             {line,
+                                                                                              277}]}]}}}}
+2019-07-05 14:12:30.155 [error] 10.101.70.32:60926 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: m5Bi2w462vAdwcYar1LwvQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:12:32.611 [error] 10.101.70.32:60928 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: /tIQ/vmGU8RZHkScL4lDzQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:12:34.783 [error] 10.101.70.32:60930 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: FKO5XQ7aORzQJjldntLsyA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:12:37.778 [error] 10.101.70.32:60932 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: hmWu9em78aZylu7v1I+ZbQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:12:40.564 [error] 10.101.70.32:60934 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: sAZ62wn8OstsqFSssURb9Q==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:12:44.046 [error] 10.101.70.32:60936 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: XijstJIaXUW/dvyAVw6xAA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:12:48.299 [error] 10.101.70.32:60938 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: HB6jZMJY2G9YYf8Ny/ImPg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:12:52.010 [error] 10.101.70.32:60940 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: ulkpK3KQXE8ph2lC3gItEA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:12:55.335 [error] 10.101.70.32:60942 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: A3DubWqV8tFnwTtjS799xg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:12:58.754 [error] 10.101.70.32:60944 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: ZdQZBQZYre5svuNzXy5kgQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:13:02.073 [error] 10.101.70.32:60946 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: jpD10V5Fd4pdiDnqdOnvBQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:13:07.105 [error] 10.101.70.32:60948 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: aYETZiq/VsVvN6bC59Cbkg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:13:12.639 [error] 10.101.70.32:60950 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: UJoX61qMYroMEBREGn4JzA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:13:16.315 [error] 10.101.70.32:60952 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 5XP/rj7qa8YpZvDulo7moQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:13:18.996 [error] 10.101.70.32:60954 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 5uzO4cx71r03q5STDgaosw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:13:21.436 [error] 10.101.70.32:60958 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: Uz8SO4hFZA4rnyacsGfdag==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:13:25.914 [error] 10.101.70.32:60960 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: hVOkmfPNhcaCzTZiA8NZnw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:16:06.818 [error] Failed to start Ranch listener 'http:management' in ranch_tcp:listen([{cacerts,'...'},{key,'...'},{cert,'...'},{port,8080},{backlog,512},{send_timeout,15000},{send_timeout_close,true},{nodelay,true}]) for reason eaddrinuse (address already in use)
+2019-07-05 14:16:06.819 [error] supervisor: {<0.1608.0>,ranch_listener_sup}
+    errorContext: start_error
+    reason: {listen_error,'http:management',eaddrinuse}
+    offender: [{pid,undefined},
+               {id,ranch_acceptors_sup},
+               {mfargs,
+                   {ranch_acceptors_sup,start_link,
+                       ['http:management',ranch_tcp]}},
+               {restart_type,permanent},
+               {shutdown,infinity},
+               {child_type,supervisor}]
+2019-07-05 14:16:06.819 [error] crasher:
+    initial call: supervisor:ranch_acceptors_sup/1
+    pid: <0.1610.0>
+    registered_name: []
+    exception exit: {listen_error,'http:management',eaddrinuse}
+      in function  ranch_acceptors_sup:listen_error/5 (src/ranch_acceptors_sup.erl, line 66)
+      in call from ranch_acceptors_sup:init/1 (src/ranch_acceptors_sup.erl, line 44)
+      in call from supervisor:init/1 (supervisor.erl, line 295)
+      in call from gen_server:init_it/2 (gen_server.erl, line 374)
+      in call from gen_server:init_it/6 (gen_server.erl, line 342)
+    ancestors: [<0.1608.0>,ranch_sup,<0.1330.0>]
+    message_queue_len: 0
+    messages: []
+    links: [<0.1608.0>]
+    dictionary: [{logger,error_logger}]
+    trap_exit: true
+    status: running
+    heap_size: 4185
+    stack_size: 27
+    reductions: 28655
+  neighbours:
+2019-07-05 14:16:06.821 [error] crasher:
+    initial call: application_master:init/4
+    pid: <0.1605.0>
+    registered_name: []
+    exception exit: {bad_return,
+                        {{emqx_mgmt_app,start,[normal,[]]},
+                         {'EXIT',
+                             {{badmatch,{error,eaddrinuse}},
+                              [{minirest,start_http,3,
+                                   [{file,"src/minirest.erl"},{line,47}]},
+                               {lists,foreach,2,
+                                   [{file,"lists.erl"},{line,1338}]},
+                               {emqx_mgmt_app,start,2,
+                                   [{file,"src/emqx_mgmt_app.erl"},{line,27}]},
+                               {application_master,start_it_old,4,
+                                   [{file,"application_master.erl"},
+                                    {line,277}]}]}}}}
+      in function  application_master:init/4 (application_master.erl, line 138)
+    ancestors: [<0.1604.0>]
+    message_queue_len: 1
+    messages: [{'EXIT',<0.1606.0>,normal}]
+    links: [<0.1604.0>,<0.1247.0>]
+    dictionary: []
+    trap_exit: true
+    status: running
+    heap_size: 610
+    stack_size: 27
+    reductions: 216
+  neighbours:
+2019-07-05 14:16:06.831 [error] [Plugins] Load plugin emqx_management failed, cannot start plugin emqx_management for {bad_return,
+                                                                                       {{emqx_mgmt_app,
+                                                                                         start,
+                                                                                         [normal,
+                                                                                          []]},
+                                                                                        {'EXIT',
+                                                                                         {{badmatch,
+                                                                                           {error,
+                                                                                            eaddrinuse}},
+                                                                                          [{minirest,
+                                                                                            start_http,
+                                                                                            3,
+                                                                                            [{file,
+                                                                                              "src/minirest.erl"},
+                                                                                             {line,
+                                                                                              47}]},
+                                                                                           {lists,
+                                                                                            foreach,
+                                                                                            2,
+                                                                                            [{file,
+                                                                                              "lists.erl"},
+                                                                                             {line,
+                                                                                              1338}]},
+                                                                                           {emqx_mgmt_app,
+                                                                                            start,
+                                                                                            2,
+                                                                                            [{file,
+                                                                                              "src/emqx_mgmt_app.erl"},
+                                                                                             {line,
+                                                                                              27}]},
+                                                                                           {application_master,
+                                                                                            start_it_old,
+                                                                                            4,
+                                                                                            [{file,
+                                                                                              "application_master.erl"},
+                                                                                             {line,
+                                                                                              277}]}]}}}}
+2019-07-05 14:18:26.967 [error] 10.101.70.32:32906 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: DMHg+T+m4waPSZ19Q+R79Q==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:18:32.872 [error] 10.101.70.32:32908 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 7gJL0/56r3IgUnCwvVj0cg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:18:36.411 [error] 10.101.70.32:32910 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 6zDQ78btYLZYv92k/7CGeA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:18:41.764 [error] 10.101.70.32:32912 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: FZGkYr9oAp4xPmWuAlJWeg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:18:44.216 [error] 10.101.70.32:32914 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 85zfQsSlYWmYAPPLfdgGZg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:18:47.661 [error] 10.101.70.32:32916 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: L4y+1DQpnlPFL1sMFsqFNg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:18:51.073 [error] 10.101.70.32:32918 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: f68LBEqXJypiauV4SLbvaA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:18:54.507 [error] 10.101.70.32:32920 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: hrizVVuUvAn9M9R8NLzP7Q==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:18:59.184 [error] 10.101.70.32:32922 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: m2bURstRdbh7CGOv6j74zg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:02.387 [error] 10.101.70.32:32924 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: aVsIWwsT9Q4GeqPYJPsOHQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:08.162 [error] 10.101.70.32:32926 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: BLAZ5bX8HGhZbQqsXUqRTw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:09.941 [error] 10.101.70.32:32928 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 5c8fLoDym9X6CJzXQb09Gw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:14.472 [error] 10.101.70.32:32930 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: mjrxKfEz/wm8nbE6Vm9piA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:19.778 [error] 10.101.70.32:32934 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: tbkp+jnCspt6Ap5PxyVH1Q==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:23.916 [error] 10.101.70.32:32936 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: ytcEwebN4YNe5F2/SKuVXw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:28.475 [error] 10.101.70.32:32938 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 5VQaK1ixob8plqO/BKmBug==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:33.152 [error] 10.101.70.32:32940 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: fuiMv27ny4YFB/B225HdGQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:36.020 [error] 10.101.70.32:32942 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: Tpsk5D1KaErtI9b2EOgvpw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:39.365 [error] 10.101.70.32:32944 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: Hyv6wYCISxymJTk5RadrVA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:42.537 [error] 10.101.70.32:32946 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: YgHX4ycJK1X8tGaphxXlXQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:45.079 [error] 10.101.70.32:32948 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: EkQPTceog7Au7bY0gyyvMw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:47.417 [error] 10.101.70.32:32950 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 71U1L33fHvNMehAzWp+htA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:51.965 [error] 10.101.70.32:32952 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 0De5JuYroCGIUGQrx/gJwQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:19:57.265 [error] 10.101.70.32:32954 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: M4nYcBs5Iqwp9yCfPKA4HQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:20:00.485 [error] 10.101.70.32:32956 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: ztBUMzlMyrNQX8WA2jbJkA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:20:02.676 [error] 10.101.70.32:32958 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: i0z/COdfZX6gfO6duVFCEg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:20:07.908 [error] 10.101.70.32:32960 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: r2E7/irSIz8j+W+bV5L3Ww==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:20:11.571 [error] 10.101.70.32:32962 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 8U0wxlJYggzDHz9SaJz5aQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:20:14.229 [error] 10.101.70.32:32964 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: bct/CReqAfY0132YsZ+KPg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:20:16.522 [error] 10.101.70.32:32966 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: pC1PrAkRNMcDXP9VU+fgJg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:20:21.520 [error] 10.101.70.32:32968 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 6ucgk3vgj8Epro3vtvQSEQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 14:20:25.817 [error] 10.101.70.32:32970 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mq">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nHost: 10.101.70.32:1883\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: SiqOF16WnAMN8zaONjhFbQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:49:00.382 [error] Failed to start Ranch listener 'http:management' in ranch_tcp:listen([{cacerts,'...'},{key,'...'},{cert,'...'},{port,8080},{backlog,512},{send_timeout,15000},{send_timeout_close,true},{nodelay,true}]) for reason eaddrinuse (address already in use)
+2019-07-05 15:49:00.383 [error] supervisor: {<0.1606.0>,ranch_listener_sup}
+    errorContext: start_error
+    reason: {listen_error,'http:management',eaddrinuse}
+    offender: [{pid,undefined},
+               {id,ranch_acceptors_sup},
+               {mfargs,
+                   {ranch_acceptors_sup,start_link,
+                       ['http:management',ranch_tcp]}},
+               {restart_type,permanent},
+               {shutdown,infinity},
+               {child_type,supervisor}]
+2019-07-05 15:49:00.383 [error] crasher:
+    initial call: supervisor:ranch_acceptors_sup/1
+    pid: <0.1608.0>
+    registered_name: []
+    exception exit: {listen_error,'http:management',eaddrinuse}
+      in function  ranch_acceptors_sup:listen_error/5 (src/ranch_acceptors_sup.erl, line 66)
+      in call from ranch_acceptors_sup:init/1 (src/ranch_acceptors_sup.erl, line 44)
+      in call from supervisor:init/1 (supervisor.erl, line 295)
+      in call from gen_server:init_it/2 (gen_server.erl, line 374)
+      in call from gen_server:init_it/6 (gen_server.erl, line 342)
+    ancestors: [<0.1606.0>,ranch_sup,<0.1332.0>]
+    message_queue_len: 0
+    messages: []
+    links: [<0.1606.0>]
+    dictionary: [{logger,error_logger}]
+    trap_exit: true
+    status: running
+    heap_size: 4185
+    stack_size: 27
+    reductions: 28655
+  neighbours:
+2019-07-05 15:49:00.385 [error] crasher:
+    initial call: application_master:init/4
+    pid: <0.1603.0>
+    registered_name: []
+    exception exit: {bad_return,
+                        {{emqx_mgmt_app,start,[normal,[]]},
+                         {'EXIT',
+                             {{badmatch,{error,eaddrinuse}},
+                              [{minirest,start_http,3,
+                                   [{file,"src/minirest.erl"},{line,47}]},
+                               {lists,foreach,2,
+                                   [{file,"lists.erl"},{line,1338}]},
+                               {emqx_mgmt_app,start,2,
+                                   [{file,"src/emqx_mgmt_app.erl"},{line,27}]},
+                               {application_master,start_it_old,4,
+                                   [{file,"application_master.erl"},
+                                    {line,277}]}]}}}}
+      in function  application_master:init/4 (application_master.erl, line 138)
+    ancestors: [<0.1602.0>]
+    message_queue_len: 1
+    messages: [{'EXIT',<0.1604.0>,normal}]
+    links: [<0.1602.0>,<0.1247.0>]
+    dictionary: []
+    trap_exit: true
+    status: running
+    heap_size: 610
+    stack_size: 27
+    reductions: 216
+  neighbours:
+2019-07-05 15:49:00.395 [error] [Plugins] Load plugin emqx_management failed, cannot start plugin emqx_management for {bad_return,
+                                                                                       {{emqx_mgmt_app,
+                                                                                         start,
+                                                                                         [normal,
+                                                                                          []]},
+                                                                                        {'EXIT',
+                                                                                         {{badmatch,
+                                                                                           {error,
+                                                                                            eaddrinuse}},
+                                                                                          [{minirest,
+                                                                                            start_http,
+                                                                                            3,
+                                                                                            [{file,
+                                                                                              "src/minirest.erl"},
+                                                                                             {line,
+                                                                                              47}]},
+                                                                                           {lists,
+                                                                                            foreach,
+                                                                                            2,
+                                                                                            [{file,
+                                                                                              "lists.erl"},
+                                                                                             {line,
+                                                                                              1338}]},
+                                                                                           {emqx_mgmt_app,
+                                                                                            start,
+                                                                                            2,
+                                                                                            [{file,
+                                                                                              "src/emqx_mgmt_app.erl"},
+                                                                                             {line,
+                                                                                              27}]},
+                                                                                           {application_master,
+                                                                                            start_it_old,
+                                                                                            4,
+                                                                                            [{file,
+                                                                                              "application_master.erl"},
+                                                                                             {line,
+                                                                                              277}]}]}}}}
+2019-07-05 15:55:14.779 [error] 10.101.70.32:35504 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: EClFqJORUbwE+W5EGBNetw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:15.795 [error] 10.101.70.32:35506 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: dvnGKc2WSGjs/X70ajvE3A==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:16.852 [error] 10.101.70.32:35508 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: GGerXrT2yxWPoBRDILktmQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:17.897 [error] 10.101.70.32:35510 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: znNEMwUjJrNoCIpL7AWr/A==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:18.942 [error] 10.101.70.32:35512 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: RgL4Qbkw+9atdBuzHaw2lg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:19.982 [error] 10.101.70.32:35516 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 02VoDidD/79gyf83lsesVA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:21.053 [error] 10.101.70.32:35518 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 2uM6g6MM6O4vYocXnOD6Ew==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:22.118 [error] 10.101.70.32:35520 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: GVc1acJNtwPAjuK2avGHVA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:23.172 [error] 10.101.70.32:35522 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: O0sh1mzAkwk3zhl6xnZB2Q==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:24.221 [error] 10.101.70.32:35524 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: ODvrH19zm0EJ6FgZKulVpw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:25.267 [error] 10.101.70.32:35526 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 5f7ncjZCSRnFao9XrIGcZQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:26.360 [error] 10.101.70.32:35528 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: URMX97qs6Q+wMOIQaXTWrw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:27.450 [error] 10.101.70.32:35530 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 7TFgxewrEWexPRw2piex5g==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:28.536 [error] 10.101.70.32:35532 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: fvZ0QVbNqlZZD8++ybCYAA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:29.605 [error] 10.101.70.32:35534 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 7LDKynYwFV45V3jU1mK/RQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:30.685 [error] 10.101.70.32:35536 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: h7h7oHxELKBmnxOaYvkB/w==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:31.848 [error] 10.101.70.32:35538 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: E1rBk8tRymATw4yYdtca+A==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:32.932 [error] 10.101.70.32:35540 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: MppqXbrdB8J1nVe9W1jI5g==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:34.052 [error] 10.101.70.32:35542 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: ZSeUnEpEu/tP6rWIc0eXjA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:35.189 [error] 10.101.70.32:35544 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: fLq4/6wETKTxuYVt7dq/Gg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:36.260 [error] 10.101.70.32:35546 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: oR7Yvln1h7nJlh8PkI8IqA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:37.408 [error] 10.101.70.32:35548 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: kqCUUo9OzpVpxs9zPgoyvg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:38.738 [error] 10.101.70.32:35550 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: oSx701rtMB2xrXBQr1JDYQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:39.886 [error] 10.101.70.32:35552 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: Z1F4SkTQZz0jEuQ6VX6NbQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:41.005 [error] 10.101.70.32:35554 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: Mg+EuNg+h0/nOoT8LLfL7A==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:42.237 [error] 10.101.70.32:35556 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: X5gKi5xqyPxggd6vStWP3Q==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:43.896 [error] 10.101.70.32:35558 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: CNq4jEHobYmPyI5QeXd1aA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:45.403 [error] 10.101.70.32:35560 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: sWSPsC5YN2RoNUEpnaEqcg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:47.051 [error] 10.101.70.32:35562 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 54YQzZTRmGSAfLIi5IGMSQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:48.253 [error] 10.101.70.32:35564 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: R4XdGOLMXYXPG4RlfajT3g==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:49.554 [error] 10.101.70.32:35566 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: 0yhpOJLBCR7Tqwi24RushQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:51.006 [error] 10.101.70.32:35568 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: DmZ5NYnlEZIgHeFv783MgQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:53.282 [error] 10.101.70.32:35570 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: XcmG2LIgJTaMDV3iE2jpVA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:54.836 [error] 10.101.70.32:35572 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: N0u7fqAwr0TqN3jQRjEhJw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:56.140 [error] 10.101.70.32:35574 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: B3oNaHCUsdikSBjBZiJ1bg==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:55:57.818 [error] 10.101.70.32:35576 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: J35PiMUKtSBYlFfgBYMkZQ==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:56:00.285 [error] 10.101.70.32:35578 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: NKjTdDB0ia9YmYg9YU+k/g==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:56:02.704 [error] 10.101.70.32:35580 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: M0UC26NyX3FMChA26HNMEw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:56:05.202 [error] 10.101.70.32:35582 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: nW5fot7Tnq3all0QCHZRyA==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:56:08.010 [error] 10.101.70.32:35584 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: sM7PbupZ+9ieLCJ4lHMoGw==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 15:56:13.234 [error] 10.101.70.32:35586 [Connection] Parse failed for function_clause
+Stacktrace:[{emqx_frame,parse_packet,
+                        [{mqtt_packet_header,4,false,3,true},
+                         <<"T /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nC">>,
+                         #{max_packet_size => 1048576,version => 4}],
+                        [{file,"src/emqx_frame.erl"},{line,128}]},
+            {emqx_frame,parse_frame,4,
+                        [{file,"src/emqx_frame.erl"},{line,109}]},
+            {emqx_connection,process_incoming,3,
+                             [{file,"src/emqx_connection.erl"},{line,392}]},
+            {gen_statem,call_state_function,5,
+                        [{file,"gen_statem.erl"},{line,1660}]},
+            {gen_statem,loop_event_state_function,6,
+                        [{file,"gen_statem.erl"},{line,1023}]},
+            {proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,249}]}]
+Error data:<<"GET /mqtt HTTP/1.1\r\nSec-WebSocket-Protocol: mqtt\r\nUpgrade: websocket\r\nConnection: upgrade\r\nX-real-ip: 172.24.8.46\r\nX-Forwarded-For: 172.24.8.46\r\nHost: 10.101.70.32:1883\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nOrigin: http://127.0.0.1:16607\r\nSec-WebSocket-Version: 13\r\nUser-Agent: wechatdevtools appservice port/18152 token/b40a3ea879fe636975f203f9fe0d5e1c\r\nAccept-Encoding: gzip, deflate, br\r\nAccept-Language: zh-CN,zh;q=0.8\r\nReferer: https://servicewechat.com/wx4b02b7856ddaaf30/devtools/page-frame.html\r\nSec-WebSocket-Key: jgcNk6hbxGLMZJI6apWJ1A==\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n">>
+2019-07-05 17:00:55.531 [error] Failed to start Ranch listener 'http:management' in ranch_tcp:listen([{cacerts,'...'},{key,'...'},{cert,'...'},{port,8080},{backlog,512},{send_timeout,15000},{send_timeout_close,true},{nodelay,true}]) for reason eaddrinuse (address already in use)
+2019-07-05 17:00:55.532 [error] supervisor: {<0.1606.0>,ranch_listener_sup}
+    errorContext: start_error
+    reason: {listen_error,'http:management',eaddrinuse}
+    offender: [{pid,undefined},
+               {id,ranch_acceptors_sup},
+               {mfargs,
+                   {ranch_acceptors_sup,start_link,
+                       ['http:management',ranch_tcp]}},
+               {restart_type,permanent},
+               {shutdown,infinity},
+               {child_type,supervisor}]
+2019-07-05 17:00:55.532 [error] crasher:
+    initial call: supervisor:ranch_acceptors_sup/1
+    pid: <0.1608.0>
+    registered_name: []
+    exception exit: {listen_error,'http:management',eaddrinuse}
+      in function  ranch_acceptors_sup:listen_error/5 (src/ranch_acceptors_sup.erl, line 66)
+      in call from ranch_acceptors_sup:init/1 (src/ranch_acceptors_sup.erl, line 44)
+      in call from supervisor:init/1 (supervisor.erl, line 295)
+      in call from gen_server:init_it/2 (gen_server.erl, line 374)
+      in call from gen_server:init_it/6 (gen_server.erl, line 342)
+    ancestors: [<0.1606.0>,ranch_sup,<0.1330.0>]
+    message_queue_len: 0
+    messages: []
+    links: [<0.1606.0>]
+    dictionary: [{logger,error_logger}]
+    trap_exit: true
+    status: running
+    heap_size: 4185
+    stack_size: 27
+    reductions: 28655
+  neighbours:
+2019-07-05 17:00:55.534 [error] crasher:
+    initial call: application_master:init/4
+    pid: <0.1603.0>
+    registered_name: []
+    exception exit: {bad_return,
+                        {{emqx_mgmt_app,start,[normal,[]]},
+                         {'EXIT',
+                             {{badmatch,{error,eaddrinuse}},
+                              [{minirest,start_http,3,
+                                   [{file,"src/minirest.erl"},{line,47}]},
+                               {lists,foreach,2,
+                                   [{file,"lists.erl"},{line,1338}]},
+                               {emqx_mgmt_app,start,2,
+                                   [{file,"src/emqx_mgmt_app.erl"},{line,27}]},
+                               {application_master,start_it_old,4,
+                                   [{file,"application_master.erl"},
+                                    {line,277}]}]}}}}
+      in function  application_master:init/4 (application_master.erl, line 138)
+    ancestors: [<0.1602.0>]
+    message_queue_len: 1
+    messages: [{'EXIT',<0.1604.0>,normal}]
+    links: [<0.1602.0>,<0.1247.0>]
+    dictionary: []
+    trap_exit: true
+    status: running
+    heap_size: 610
+    stack_size: 27
+    reductions: 216
+  neighbours:
+2019-07-05 17:00:55.544 [error] [Plugins] Load plugin emqx_management failed, cannot start plugin emqx_management for {bad_return,
+                                                                                       {{emqx_mgmt_app,
+                                                                                         start,
+                                                                                         [normal,
+                                                                                          []]},
+                                                                                        {'EXIT',
+                                                                                         {{badmatch,
+                                                                                           {error,
+                                                                                            eaddrinuse}},
+                                                                                          [{minirest,
+                                                                                            start_http,
+                                                                                            3,
+                                                                                            [{file,
+                                                                                              "src/minirest.erl"},
+                                                                                             {line,
+                                                                                              47}]},
+                                                                                           {lists,
+                                                                                            foreach,
+                                                                                            2,
+                                                                                            [{file,
+                                                                                              "lists.erl"},
+                                                                                             {line,
+                                                                                              1338}]},
+                                                                                           {emqx_mgmt_app,
+                                                                                            start,
+                                                                                            2,
+                                                                                            [{file,
+                                                                                              "src/emqx_mgmt_app.erl"},
+                                                                                             {line,
+                                                                                              27}]},
+                                                                                           {application_master,
+                                                                                            start_it_old,
+                                                                                            4,
+                                                                                            [{file,
+                                                                                              "application_master.erl"},
+                                                                                             {line,
+                                                                                              277}]}]}}}}

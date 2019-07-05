@@ -1,0 +1,8 @@
+%%-*- mode: erlang -*-
+%% emqx_auth_username config mapping
+
+{mapping, "auth.user.password_hash", "emqx_auth_username.password_hash", [
+  {default, sha256},
+  {datatype, {enum, [plain, md5, sha, sha256]}}
+]}.
+

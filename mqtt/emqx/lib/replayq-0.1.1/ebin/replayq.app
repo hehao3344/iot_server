@@ -1,0 +1,10 @@
+{application,replayq,
+             [{description,"A Disk Queue for Log Replay in Erlang"},
+              {vsn,"0.1.1"},
+              {registered,[]},
+              {applications,[kernel,stdlib]},
+              {env,[]},
+              {modules, ['replayq']},
+              {maintainers,[]},
+              {licenses,["Apache 2.0"]},
+              {links,[]}]}.
