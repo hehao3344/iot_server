@@ -35,6 +35,8 @@ function confirmDelDev() {
         <td width="10%">设备ID</td>
         <td width="10%">OpenID</td>
         <td width="10%">设备名</td>
+		<td width="10%">product_key</td>
+		<td width="10%">dev_secret</td>		
         <td width="10%">上线时间</td>
         <td width="10%">离线时间</td>
         <td width="8%">状态</td>

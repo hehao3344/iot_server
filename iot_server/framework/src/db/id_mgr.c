@@ -8,7 +8,8 @@
 
 #define MAX_ID_NUMBER                   (20000)
 
-#define CREATE_ID_STRING                "create table id_table(id integer primary key autoincrement, dev_uuid char(16), gopenid char(32), openid1 char(32), openid2 char(32), openid3 char(32), dev_name char(32), last_online_time char(24), last_offline_time char(24), online int)"
+#define CREATE_ID_STRING                "create table id_table(id integer primary key autoincrement, dev_uuid char(16), gopenid char(32), openid1 char(32), openid2 char(32), openid3 char(32), \
+dev_name char(32), product_key char(32), dev_secret char(64), last_online_time char(24), last_offline_time char(24), online int)"
 #define CREATE_INDEX_ID_STRING          "create index id_index on id_table(dev_uuid)"
 
 typedef struct _ID_MGR_OBJECT
@@ -70,7 +71,7 @@ create_failed:
     return NULL;
 }
 
-int id_mgr_add_device(ID_MGR_HANDLE handle, char *id)
+int id_mgr_add_device(ID_MGR_HANDLE handle, char *id, char * product_key, char *dev_secret)
 {
     int ret    = -1;
     int result = 0;
@@ -82,7 +83,7 @@ int id_mgr_add_device(ID_MGR_HANDLE handle, char *id)
     {
         // insert
         memset(sq_cmd, 0, sizeof(sq_cmd));
-        snprintf(sq_cmd, sizeof(sq_cmd), "insert into id_table(dev_uuid, online) values ('%s', '%d')", id, 0);
+        snprintf(sq_cmd, sizeof(sq_cmd), "insert into id_table(dev_uuid, product_key, dev_secret, online) values ('%s', '%s', '%s', '%d')", id, product_key, dev_secret, 0);
 
         pthread_mutex_lock(&handle->mutex);
         result = sqlite3_exec(handle->id_db, sq_cmd, 0, 0, &errmsg);
@@ -183,6 +184,81 @@ int id_mgr_update_dev_name(ID_MGR_HANDLE handle, char *id, char * dev_name)
     return ret;
 }
 
+int id_mgr_update_product_key(ID_MGR_HANDLE handle, char *id, char * product_key)
+{
+    int ret    = -1;
+    int result = 0;
+    char * errmsg = NULL;
+    char  sq_cmd[256];
+
+    /* 如果设备不存在则返回 */
+    if (0 == device_is_exist(handle, id))
+    {
+        debug_error("id %s un-exist \n", id);
+        return -1;
+    }
+    else
+    {
+        // insert
+        memset(sq_cmd, 0, sizeof(sq_cmd));
+
+        sprintf(sq_cmd, "update id_table set product_key='%s' where dev_uuid = '%s'", product_key, id);
+
+        pthread_mutex_lock(&handle->mutex);
+        result = sqlite3_exec(handle->id_db, sq_cmd, 0, 0, &errmsg);
+        pthread_mutex_unlock(&handle->mutex);
+
+        if (SQLITE_OK == result)
+        {
+            debug_print("insert dev: %s product_key:%s success \n", id, product_key);
+            ret = 0;
+        }
+        else
+        {
+            debug_error("insert dev: %s product_key:%s failed \n", id, product_key);
+        }
+    }
+
+    return ret;
+}
+
+int id_mgr_update_dev_secret(ID_MGR_HANDLE handle, char *id, char * dev_secret)
+{
+    int ret    = -1;
+    int result = 0;
+    char * errmsg = NULL;
+    char  sq_cmd[256];
+
+    /* 如果设备不存在则返回 */
+    if (0 == device_is_exist(handle, id))
+    {
+        debug_error("id %s un-exist \n", id);
+        return -1;
+    }
+    else
+    {
+        // insert
+        memset(sq_cmd, 0, sizeof(sq_cmd));
+
+        sprintf(sq_cmd, "update id_table set dev_secret='%s' where dev_uuid = '%s'", dev_secret, id);
+
+        pthread_mutex_lock(&handle->mutex);
+        result = sqlite3_exec(handle->id_db, sq_cmd, 0, 0, &errmsg);
+        pthread_mutex_unlock(&handle->mutex);
+
+        if (SQLITE_OK == result)
+        {
+            debug_print("insert dev: %s dev_secret:%s success \n", id, dev_secret);
+            ret = 0;
+        }
+        else
+        {
+            debug_error("insert dev: %s dev_secret:%s failed \n", id, dev_secret);
+        }
+    }
+
+    return ret;
+}
 
 int id_mgr_update_online_time(ID_MGR_HANDLE handle, char *id, char * last_online_time)
 {
@@ -332,6 +408,74 @@ int id_mgr_get_uuid_by_group_openid(ID_MGR_HANDLE handle, char * openid, char * 
     return ret;
 }
 
+int id_mgr_get_product_key_by_group_openid(ID_MGR_HANDLE handle, char * openid, char * buf, int buf_len)
+{
+    int ret    = -1;
+    int result = 0;
+    char * errmsg = NULL;
+    char **dbResult;
+    int nRow, nColumn;
+    char sq_cmd[256];
+
+    // insert
+    memset(sq_cmd, 0, sizeof(sq_cmd));
+    sprintf(sq_cmd, "select product_key from id_table where gopenid = '%s'", openid);
+    result = sqlite3_get_table(handle->id_db, sq_cmd, &dbResult, &nRow, &nColumn, &errmsg );
+    if (SQLITE_OK == result)
+    {
+        // result store in dbResult[]
+        if ((nRow > 0) && (nColumn > 0))
+        {
+            if ((NULL != dbResult[nRow]) && (strlen(dbResult[nRow]) > 0))
+            {
+                strncpy(buf, dbResult[nRow], buf_len);
+                debug_info("get product_key %s \n", buf);
+                ret = 0;
+            }
+            else
+            {
+                debug_error("get pad error %d %d %s \n", nRow, nColumn, dbResult[nRow] );
+            }
+        }
+    }
+
+    return ret;
+}
+
+int id_mgr_get_dev_secret_by_group_openid(ID_MGR_HANDLE handle, char * openid, char * buf, int buf_len)
+{
+    int ret    = -1;
+    int result = 0;
+    char * errmsg = NULL;
+    char **dbResult;
+    int nRow, nColumn;
+    char sq_cmd[256];
+
+    // insert
+    memset(sq_cmd, 0, sizeof(sq_cmd));
+    sprintf(sq_cmd, "select dev_secret from id_table where gopenid = '%s'", openid);
+    result = sqlite3_get_table(handle->id_db, sq_cmd, &dbResult, &nRow, &nColumn, &errmsg );
+    if (SQLITE_OK == result)
+    {
+        // result store in dbResult[]
+        if ((nRow > 0) && (nColumn > 0))
+        {
+            if ((NULL != dbResult[nRow]) && (strlen(dbResult[nRow]) > 0))
+            {
+                strncpy(buf, dbResult[nRow], buf_len);
+                debug_info("get dev_secret %s \n", buf);
+                ret = 0;
+            }
+            else
+            {
+                debug_error("get pad error %d %d %s \n", nRow, nColumn, dbResult[nRow] );
+            }
+        }
+    }
+
+    return ret;
+}
+
 int id_mgr_get_uuid(ID_MGR_HANDLE handle, got_callback fn_cb, void * arg)
 {
     int ret    = -1;
@@ -345,6 +489,9 @@ int id_mgr_get_uuid(ID_MGR_HANDLE handle, got_callback fn_cb, void * arg)
     char dev_uuid[16] = {0};
     char openid[32] = {0};
     char dev_name[32] = {0};
+    char dev_secret[64] = {0};
+    char product_key[32] = {0};
+
     char last_online_time[24] = {0};
     char last_offline_time[24] = {0};
     int  online = 0;
@@ -392,6 +539,14 @@ int id_mgr_get_uuid(ID_MGR_HANDLE handle, got_callback fn_cb, void * arg)
                     {
                         strncpy(dev_name, dbResult[cur_index], sizeof(dev_name));
                     }
+                    else if (0 == strcmp(dbResult[j], "product_key"))
+                    {
+                        strncpy(product_key, dbResult[cur_index], sizeof(product_key));
+                    }
+                    else if (0 == strcmp(dbResult[j], "dev_secret"))
+                    {
+                        strncpy(dev_secret, dbResult[cur_index], sizeof(dev_secret));
+                    }
                     else if (0 == strcmp(dbResult[j], "last_online_time"))
                     {
                         strncpy(last_online_time, dbResult[cur_index], sizeof(last_online_time));
@@ -410,7 +565,7 @@ int id_mgr_get_uuid(ID_MGR_HANDLE handle, got_callback fn_cb, void * arg)
                 // debug_info("get nRow=%d nColumn=%d %d index = %d %s %s\n", nRow, nColumn, index, cur_index, dbResult[j], dbResult [cur_index]);
                 if (NULL != fn_cb)
                 {
-                    fn_cb(arg, id, dev_uuid, openid, dev_name, last_online_time, last_offline_time, online);
+                    fn_cb(arg, id, dev_uuid, openid, dev_name, product_key, dev_secret, last_online_time, last_offline_time, online);
                     ret = 0;
                 }
 #if 0
@@ -435,7 +590,6 @@ int id_mgr_get_uuid(ID_MGR_HANDLE handle, got_callback fn_cb, void * arg)
 
     return ret;
 }
-
 
 int id_mgr_get_uuid_by_index(ID_MGR_HANDLE handle, int index, char * buf, int buf_len)
 {
@@ -632,7 +786,7 @@ int id_mgr_unit_test(void)
         return -1;
     }
     char * id = "0011220398789983";
-    ret = id_mgr_add_device(handle, id);
+    ret = id_mgr_add_device(handle, id, "1", "2");
     if (0 != ret)
     {
         debug_error("id_mgr_add_device failed \n");
@@ -641,7 +795,7 @@ int id_mgr_unit_test(void)
 
     debug_info("id is exist: %d \n", id_mgr_id_is_exist(handle, id));
 
-    ret = id_mgr_add_device(handle, id);
+    ret = id_mgr_add_device(handle, id, "3", "4");
     if (0 != ret)
     {
         debug_error("id_mgr_add_device failed \n");

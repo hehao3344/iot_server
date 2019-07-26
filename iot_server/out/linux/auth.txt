@@ -1,5 +1,5 @@
 #
-#   auth.txt - Authorization data
+#   auth.txt - Authorization data hehao 123456
 #
 
 role name=user abilities=view,person,

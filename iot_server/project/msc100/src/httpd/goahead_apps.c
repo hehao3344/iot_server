@@ -9,7 +9,9 @@ static void dev_add_action(Webs *wp);
 //static void dev_list_modify_action(Webs *wp);
 static int  dev_list_jst(int jid, Webs *wp, int argc, char **argv);
 static int  utf8_2_gbk(char *dst, char *src, int *out_buf_len);
-static void db_got_fn(void * arg, int index, char * dev_uuid, char * openid, char * dev_name, char * online_time, char * offline_time, int online);
+static void db_got_fn(void * arg, int index, char * dev_uuid, char * openid, char * dev_name,
+                      char * product_key, char * dev_secret,
+                      char * online_time, char * offline_time, int online);
 
 static ID_MGR_HANDLE hid_mgr = NULL;
 
@@ -20,15 +22,11 @@ int gohead_apps_init(void)
         hid_mgr = id_mgr_create();
     }
 
-    id_mgr_add_device(hid_mgr, "10001122334455");
-    id_mgr_update_dev_name(hid_mgr, "10001122334455", "湖南长沙");
-    id_mgr_update_online_time(hid_mgr, "10001122334455", "2019-06-08 18:00:00");
-    id_mgr_update_offline_time(hid_mgr, "10001122334455", "2019-06-08 18:10:26");
-    id_mgr_add_group_openid(hid_mgr, "10001122334455", "abcdefghkdkjikjd");
-
-    id_mgr_add_device(hid_mgr, "1084f3eb83a7aa");
-    id_mgr_update_dev_name(hid_mgr, "1084f3eb83a7aa", "广东深圳");
-    id_mgr_update_online_time(hid_mgr, "1084f3eb83a7aa", "2019-06-08 18:00:00");
+    id_mgr_add_device(hid_mgr, "WX00000001", "a1bLyWPdBuK", "yzWAsgh755ZrdqK7cd8kIfpO8b21M2qN");
+    id_mgr_update_dev_name(hid_mgr, "WX00000001", "湖南长沙");
+    id_mgr_update_online_time(hid_mgr, "WX00000001", "2019-06-08 18:00:00");
+    id_mgr_update_offline_time(hid_mgr, "WX00000001", "2019-06-08 18:10:26");
+    id_mgr_add_group_openid(hid_mgr, "WX00000001", "ogDt75W7bJt-DTubZvPFrQCZ8Y58");
 
 
     websDefineJst("dev_list", dev_list_jst);
@@ -40,7 +38,9 @@ int gohead_apps_init(void)
     return 0;
 }
 
-static void db_got_fn(void * arg, int index, char * dev_uuid, char * openid, char * dev_name, char * online_time, char * offline_time, int online)
+static void db_got_fn(void * arg, int index, char * dev_uuid, char * openid, char * dev_name,
+                      char * product_key, char * dev_secret,
+                      char * online_time, char * offline_time, int online)
 {
     Webs *wp = (Webs *)arg;
 
@@ -49,8 +49,8 @@ static void db_got_fn(void * arg, int index, char * dev_uuid, char * openid, cha
     websWrite(wp, "<tr>");
     websWrite(wp, "<td width=\"60\"></td>");
     websWrite(wp, "<td width=\"80\">%06d</td>", index);
-    websWrite(wp, "<td width=\"160\">%s</td>", dev_uuid);
-    websWrite(wp, "<td width=\"160\">%s</td>", openid);
+    websWrite(wp, "<td width=\"100\">%s</td>", dev_uuid);
+    websWrite(wp, "<td width=\"100\">%s</td>", openid);
 
 #if 0
     char gbk_dev_name[128] = {0};
@@ -63,12 +63,14 @@ static void db_got_fn(void * arg, int index, char * dev_uuid, char * openid, cha
     websWrite(wp, gbk_dev_name);
 #endif
 
-    websWrite(wp, "<td width=\"160\">%s</td>", dev_name);
+    websWrite(wp, "<td width=\"100\">%s</td>", dev_name);
 
-    websWrite(wp, "<td width=\"160\">%s</td>", online_time);
-    websWrite(wp, "<td width=\"160\">%s</td>", offline_time);
+    websWrite(wp, "<td width=\"100\">%s</td>", product_key);
+    websWrite(wp, "<td width=\"100\">%s</td>", dev_secret);
+
+    websWrite(wp, "<td width=\"100\">%s</td>", online_time);
+    websWrite(wp, "<td width=\"100\">%s</td>", offline_time);
     websWrite(wp, "<td width=\"80\">%d</td>", online);
-
 
     websWrite(wp, "<td width=\"10\">");
 
@@ -116,10 +118,12 @@ static void dev_list_del_action(Webs *wp)
 
 static void dev_add_action(Webs *wp)
 {
-    const char * dev_id = websGetVar(wp, "devID", NULL);
+    const char * dev_id   = websGetVar(wp, "devID", NULL);
     const char * dev_name = websGetVar(wp, "devName", "DevName");
+    const char * pro_key = websGetVar(wp,  "productKey", "DevName");
+    const char * dev_sec = websGetVar(wp, "devSecret", "DevName");
 
-    logmsg(2, "dev_add_action called1 = %s %s ", dev_id, dev_name);
+    logmsg(2, "dev_add_action called1 = %s %s %s %s ", dev_id, dev_name, pro_key, dev_sec);
 
     websSetStatus(wp, 200);
     websWriteHeaders(wp, -1, 0);
@@ -130,9 +134,12 @@ static void dev_add_action(Webs *wp)
     {
         websWrite(wp, "Failed(invalid devID/devName length), Press<input type=submit name=GoFormRet value=return> to return add device page");
     }
-    else if ((14 == strlen(dev_id)) && (strlen(dev_name) < 32))
+    else if ((10 == strlen(dev_id)) && (strlen(dev_name) < 32))
     {
-        if ((0 == id_mgr_add_device(hid_mgr, (char *)dev_id)) && (0 == id_mgr_update_dev_name(hid_mgr, (char *)dev_id, (char *)dev_name)))
+        if ((0 == id_mgr_add_device(hid_mgr, (char *)dev_id, (char *)pro_key, (char *)dev_sec)) &&
+            (0 == id_mgr_update_dev_name(hid_mgr, (char *)dev_id, (char *)dev_name)) &&
+            (0 == id_mgr_update_product_key(hid_mgr, (char *)dev_id, (char *)pro_key)) &&
+            (0 == id_mgr_update_dev_secret(hid_mgr, (char *)dev_id, (char *)dev_sec)))
         {
             websWrite(wp, "Success, Press<input type=submit name=GoFormRet value=return>to return add device page");
         }

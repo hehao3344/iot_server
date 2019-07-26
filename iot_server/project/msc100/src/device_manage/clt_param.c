@@ -163,6 +163,16 @@ int clt_param_get_dev_uuid_by_openid(CLT_PARAM_HANDLE handle, char * openid, cha
     return id_mgr_get_uuid_by_group_openid(handle->hid_mgr, openid, buf, buf_len);
 }
 
+int clt_param_get_product_key_by_openid(CLT_PARAM_HANDLE handle, char * openid, char * buf, int buf_len)
+{
+    return id_mgr_get_product_key_by_group_openid(handle->hid_mgr, openid, buf, buf_len);
+}
+
+int clt_param_get_dev_secret_by_openid(CLT_PARAM_HANDLE handle, char * openid, char * buf, int buf_len)
+{
+    return id_mgr_get_dev_secret_by_group_openid(handle->hid_mgr, openid, buf, buf_len);
+}
+
 int clt_param_heart_beat(CLT_PARAM_HANDLE handle, char *gopenid, int sock_fd)
 {
     if (0 == strlen(gopenid))

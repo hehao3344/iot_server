@@ -17,14 +17,24 @@
 	<form name="DevAddFrom" method="post" action="/action/dev_add">
     <tr>
       <td width="5%">&nbsp;</td>
-      <td width="5%">设备ID:</td>
-	  <td width="20%"><input width="200px" type="text" name=devID value="请输入14位设备ID"></td>
+      <td width="10%">设备ID:</td>
+	  <td width="20%"><input width="200px" type="text" name=devID value="请输入10位设备ID"></td>
       <td></td>
     </tr>
     <tr>
       <td>&nbsp;</td>
       <td>设备名:</td>
 	  <td><input width="200px" type="text" name=devName value="请输入设备名"></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>产品KEY:</td>
+	  <td><input width="200px" type="text" name=productKey value="请输入product_key"></td>
+    </tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>设备秘钥:</td>
+	  <td><input width="200px" type="text" name=devSecret value="请输入dev_secret"></td>
       <td>
 	  	<input type=submit value="添加" title="submit">
 	  </td>

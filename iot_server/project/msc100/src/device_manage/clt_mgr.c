@@ -364,57 +364,20 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
         case E_DEV_GET_DEV_INFO:
         {
             int sock_fd = *(int *)ext_arg;
-            char cc_uuid[20] = {0}; // MAX_ID_LEN 16
+            char dev_uuid[20] = {0};
+            char product_key[32] = {0};
+            char dev_secret[64] = {0};
             char to_app_buf[512] = {0};
             int  success_flags = 0;
-            if (0 == clt_param_get_dev_uuid_by_openid(handle->hclt_param, cb_param->gopenid, cc_uuid, sizeof(cc_uuid)))
+            if ((0 == clt_param_get_dev_uuid_by_openid(handle->hclt_param, cb_param->gopenid, dev_uuid, sizeof(dev_uuid))) &&
+                (0 == clt_param_get_product_key_by_openid(handle->hclt_param, cb_param->gopenid, product_key, sizeof(product_key))) &&
+                (0 == clt_param_get_dev_secret_by_openid(handle->hclt_param, cb_param->gopenid, dev_secret, sizeof(dev_secret))))
             {
-                debug_info("get dev_uuid: %s \n", cc_uuid);
 
-                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_DEV_INFO_RESP, "WX00000001", "a1bLyWPdBuK", "yzWAsgh755ZrdqK7cd8kIfpO8b21M2qN");
-                success_flags = 1;
-                char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
-                debug_info("start send msg: %s len %ld sockfd %d \n", to_app_buf, len, sock_fd);
+                debug_info("get dev_info: %s %s %s \n", dev_uuid, product_key, dev_secret);
 
-                if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
-                {
-                    success_flags = 1;
-                    tcp_send(sock_fd, send_buf, len);
-                }
-                else
-                {
-                    debug_info("sockfd %d exit already \n", sock_fd);
-                }
-            }
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_DEV_INFO_RESP, dev_uuid, product_key, dev_secret);
 
-            if (0 == success_flags)
-            {
-                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_DEV_INFO_RESP, "WX000001", "a1bLyWPdBuK", "yzWAsgh755ZrdqK7cd8kIfpO8b21M2qN");
-                char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
-                debug_info("start send len %ld sockfd %d \n", len, sock_fd);
-                if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
-                {
-                    tcp_send(sock_fd, send_buf, len);
-                }
-                else
-                {
-                    debug_info("sockfd %d exit already \n", sock_fd);
-                }
-            }
-
-            break;
-        }
-
-        case E_DEV_GET_BIND:
-        {
-            int sock_fd = *(int *)ext_arg;
-            char cc_uuid[20] = {0}; // MAX_ID_LEN 16
-            char to_app_buf[512] = {0};
-            int  success_flags = 0;
-            if (0 == clt_param_get_dev_uuid_by_openid(handle->hclt_param, cb_param->gopenid, cc_uuid, sizeof(cc_uuid)))
-            {
-                debug_info("get dev_uuid: %s \n", cc_uuid);
-                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_BIND_RESP, cc_uuid, cb_param->req_id, 0);
                 success_flags = 1;
                 char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
                 debug_info("start send msg: %s len %ld sockfd %d \n", to_app_buf, len, sock_fd);
@@ -431,7 +394,7 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
 
             if (0 == success_flags)
             {
-                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_BIND_RESP, "unknown", cb_param->req_id, -1);
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_DEV_INFO_RESP, "unknown", "unknown", "unknown");
                 char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
                 debug_info("start send len %ld sockfd %d \n", len, sock_fd);
                 if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
@@ -448,7 +411,6 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
         }
         case E_DEV_BIND:
         {
-
             int sock_fd = *(int *)ext_arg;
             char to_app_buf[256];
             int  success_flags = 0;
@@ -465,7 +427,8 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
             }
             else
             {
-                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_BIND_RESP, cb_param->gopenid, cb_param->req_id, -1);
+                // 0成功 1无该设备 2该设备已经被绑定
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_BIND_RESP, cb_param->gopenid, cb_param->req_id, 1);
             }
             char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
             debug_info("start send len %ld sockfd %d msg %s \n", len, sock_fd, to_app_buf);
@@ -515,6 +478,48 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
             }
             break;
         }
+        case E_DEV_GET_BIND:
+        {
+            int sock_fd = *(int *)ext_arg;
+            char cc_uuid[20] = {0}; // MAX_ID_LEN 16
+            char to_app_buf[512] = {0};
+            int  success_flags = 0;
+            if (0 == clt_param_get_dev_uuid_by_openid(handle->hclt_param, cb_param->gopenid, cc_uuid, sizeof(cc_uuid)))
+            {
+                debug_info("get dev_uuid: %s \n", cc_uuid);
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_BIND_RESP, cc_uuid, cb_param->req_id, 0);
+                success_flags = 1;
+                char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
+                debug_info("start send msg: %s len %ld sockfd %d \n", to_app_buf, len, sock_fd);
+
+                if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
+                {
+                    tcp_send(sock_fd, send_buf, len);
+                }
+                else
+                {
+                    debug_info("sockfd %d exit already \n", sock_fd);
+                }
+            }
+
+            if (0 == success_flags)
+            {
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_BIND_RESP, "unknown", cb_param->req_id, -1);
+                char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
+                debug_info("start send len %ld sockfd %d \n", len, sock_fd);
+                if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
+                {
+                    tcp_send(sock_fd, send_buf, len);
+                }
+                else
+                {
+                    debug_info("sockfd %d exit already \n", sock_fd);
+                }
+            }
+
+            break;
+        }
+
         case E_DEV_GET_PARAM:
         {
             int sock_fd = *(int *)ext_arg;
