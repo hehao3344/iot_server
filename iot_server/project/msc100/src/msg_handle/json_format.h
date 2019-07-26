@@ -14,6 +14,12 @@ extern "C"
 \"code\":%d\
 }"
 
+#define  JSON_IOTS_APP_GET_DEV_INFO_RESP "{\
+\"method\":\"down_msg\",\
+\"device_name\":\"%s\",\
+\"product_key\":\"%s\",\
+\"dev_secret\":\"%s\"\
+}"
 
 #define  JSON_IOTS_APP_BIND_RESP "{\
 \"method\":\"down_msg\",\
