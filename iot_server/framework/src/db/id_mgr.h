@@ -28,7 +28,7 @@ int id_mgr_update_online_time(ID_MGR_HANDLE handle, char *id, char * last_online
 
 int id_mgr_update_offline_time(ID_MGR_HANDLE handle, char *id, char * last_offline_time);
 
-int id_mgr_del_group_openid(ID_MGR_HANDLE handle, char *id);
+int id_mgr_del_group_openid(ID_MGR_HANDLE handle, char *id, char * gopenid);
 
 int id_mgr_get_uuid_by_group_openid(ID_MGR_HANDLE handle, char * openid, char * buf, int buf_len);
 

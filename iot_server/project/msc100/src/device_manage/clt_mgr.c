@@ -49,8 +49,8 @@ typedef struct _CLT_MGR_OBJECT
 static CLT_MGR_OBJECT * instance(void);
 static void clt_thread_center(long user_info);
 static void clt_flush_center(long user_info);
-static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg);
 static void sock_exit_fn(void * arg, int sock_fd);
+static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg);
 
 CLT_MGR_HANDLE clt_mgr_create(DEV_PARAM_HANDLE hdev_param)
 {
@@ -282,9 +282,7 @@ static void clt_thread_center(long param)
                             strcat(send_buf, accept_key);
                             strcat(send_buf, "\r\n\r\n");
                             tcp_send(events[i].data.fd, send_buf, strlen(send_buf));
-
                             debug_info("new client in, send response: %s \n", send_buf);
-
                             clt_param_add_connect_sock(handle->hclt_param, events[i].data.fd);
                         }
                     }
@@ -294,7 +292,10 @@ static void clt_thread_center(long param)
                         if (WDT_ERR != ret)
                         {
                             debug_info("get msg %s \n", dec_buf);
-                            json_msg_clt_msg(handle->h_jmc, dec_buf, strlen(dec_buf), resp_buf, sizeof(resp_buf), &(events[i].data.fd));
+                            if (NULL != strstr(dec_buf, "{"))
+                            {
+                                json_msg_clt_msg(handle->h_jmc, dec_buf, strlen(dec_buf), resp_buf, sizeof(resp_buf), &(events[i].data.fd));
+                            }
                         }
                     }
                 }
@@ -396,7 +397,7 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
             {
                 snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_GET_DEV_INFO_RESP, "unknown", "unknown", "unknown");
                 char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
-                debug_info("start send len %ld sockfd %d \n", len, sock_fd);
+                debug_info("start send len %ld sockfd %d msg %s \n", len, sock_fd, to_app_buf);
                 if (1 == clt_param_sock_fd_is_exist(handle->hclt_param, sock_fd))
                 {
                     tcp_send(sock_fd, send_buf, len);
@@ -412,10 +413,12 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
         case E_DEV_BIND:
         {
             int sock_fd = *(int *)ext_arg;
-            char to_app_buf[256];
-            int  success_flags = 0;
+            char to_app_buf[256] = {0};
+            int success_flags = 0;
+            int ret = -1;
             debug_info("binding dev:%s openid:%s \n", cb_param->str_arg[0], cb_param->gopenid);
-            if (0 == clt_param_bind(handle->hclt_param, cb_param->str_arg[0], cb_param->gopenid))
+            ret = clt_param_bind(handle->hclt_param, cb_param->str_arg[0], cb_param->gopenid);
+            if (0 == ret)
             {
                 debug_info("bind successful \n");
                 success_flags = 1;
@@ -427,8 +430,9 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
             }
             else
             {
-                // 0成功 1无该设备 2该设备已经被绑定
-                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_BIND_RESP, cb_param->gopenid, cb_param->req_id, 1);
+                // 0成功 1该设备已经被绑定 2无该设备
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_BIND_RESP, cb_param->gopenid, cb_param->req_id, ret);
+                debug_info("send to app buf %s \n", to_app_buf);
             }
             char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
             debug_info("start send len %ld sockfd %d msg %s \n", len, sock_fd, to_app_buf);
@@ -448,10 +452,12 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
             int sock_fd = *(int *)ext_arg;
             char to_app_buf[256];
             int  success_flags = 0;
+            int  ret = -1;
             debug_info("unbinding dev:%s openid:%s \n", cb_param->str_arg[0], cb_param->gopenid);
 
             /* 把dev_uuid相关联的openID全部设置为null */
-            if (0 == clt_param_unbind(handle->hclt_param, cb_param->str_arg[0]))
+            ret = clt_param_unbind(handle->hclt_param, cb_param->str_arg[0], cb_param->gopenid);
+            if (0 == ret)
             {
                 debug_info("unbind successful \n");
                 clt_param_remove(handle->hclt_param, cb_param->gopenid);
@@ -464,7 +470,7 @@ static int json_msg_fn(void * arg, CLT_MSG_CB_PARAM * cb_param, void * ext_arg)
             }
             else
             {
-                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_UNBIND_RESP, cb_param->gopenid, cb_param->req_id, -1);
+                snprintf(to_app_buf, sizeof(to_app_buf), JSON_IOTS_APP_UNBIND_RESP, cb_param->gopenid, cb_param->req_id, ret);
             }
             char * send_buf = ws_construct_packet_data(handle->ws_handle, to_app_buf, &len);
             debug_info("start send len %ld sockfd %d msg %s \n", len, sock_fd, to_app_buf);

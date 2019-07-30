@@ -8,8 +8,11 @@
 
 #define MAX_ID_NUMBER                   (20000)
 
-#define CREATE_ID_STRING                "create table id_table(id integer primary key autoincrement, dev_uuid char(16), gopenid char(32), openid1 char(32), openid2 char(32), openid3 char(32), \
-dev_name char(32), product_key char(32), dev_secret char(64), last_online_time char(24), last_offline_time char(24), online int)"
+#define CREATE_ID_STRING                "create table id_table(id integer primary key autoincrement, \
+dev_uuid char(16), gopenid char(32), openid1 char(32), \
+openid2 char(32), openid3 char(32), \
+dev_name char(32), product_key char(32), dev_secret char(64), \
+last_online_time char(24), last_offline_time char(24), online int)"
 #define CREATE_INDEX_ID_STRING          "create index id_index on id_table(dev_uuid)"
 
 typedef struct _ID_MGR_OBJECT
@@ -108,38 +111,71 @@ int id_mgr_add_device(ID_MGR_HANDLE handle, char *id, char * product_key, char *
     return ret;
 }
 
+// 0 成功 1 该设备已经被绑定 2 设备不存在 -1 失败
 int id_mgr_add_group_openid(ID_MGR_HANDLE handle, char *id, char * openid)
 {
     int ret    = -1;
     int result = 0;
     char * errmsg = NULL;
+    int nRow, nColumn;
+    char **dbResult;
     char  sq_cmd[256];
 
     /* 如果设备不存在则返回 */
     if (0 == device_is_exist(handle, id))
     {
         debug_error("id %s un-exist \n", id);
-        return -1;
+        return 2;
     }
     else
     {
+        int should_insert = 0;
         // insert
         memset(sq_cmd, 0, sizeof(sq_cmd));
 
-        sprintf(sq_cmd, "update id_table set gopenid='%s' where dev_uuid = '%s'", openid, id);
-
-        pthread_mutex_lock(&handle->mutex);
-        result = sqlite3_exec(handle->id_db, sq_cmd, 0, 0, &errmsg);
-        pthread_mutex_unlock(&handle->mutex);
-
+        sprintf(sq_cmd, "select gopenid from id_table where dev_uuid = '%s'", id);
+        result = sqlite3_get_table(handle->id_db, sq_cmd, &dbResult, &nRow, &nColumn, &errmsg );
         if (SQLITE_OK == result)
         {
-            debug_print("insert dev: %s openid:%s success \n", id, openid);
-            ret = 0;
+            if ((nRow > 0) && (nColumn > 0))
+            {
+                if ((NULL != dbResult[nRow]) && (strlen(dbResult[nRow]) > 0))
+                {
+                    debug_print("dev: %s openid %s exist already \n", id, openid);
+                    ret = 1;
+                }
+                else
+                {
+                    should_insert = 1;
+                }
+            }
+            else
+            {
+                should_insert = 1;
+            }
         }
         else
         {
-            debug_error("insert dev: %s openid:%s failed \n", id, openid);
+            should_insert = 1;
+        }
+
+        if (1 == should_insert)
+        {
+            sprintf(sq_cmd, "update id_table set gopenid='%s' where dev_uuid = '%s'", openid, id);
+
+            pthread_mutex_lock(&handle->mutex);
+            result = sqlite3_exec(handle->id_db, sq_cmd, 0, 0, &errmsg);
+            pthread_mutex_unlock(&handle->mutex);
+
+            if (SQLITE_OK == result)
+            {
+                debug_print("insert dev: %s openid:%s success \n", id, openid);
+                ret = 0;
+            }
+            else
+            {
+                debug_error("insert dev: %s openid:%s failed \n", id, openid);
+            }
         }
     }
 
@@ -336,7 +372,8 @@ int id_mgr_update_offline_time(ID_MGR_HANDLE handle, char *id, char * last_offli
     return ret;
 }
 
-int id_mgr_del_group_openid(ID_MGR_HANDLE handle, char *id)
+/* 0成功 1无该设备 2 设备未被绑定 3解绑失败*/
+int id_mgr_del_group_openid(ID_MGR_HANDLE handle, char *id, char * gopenid)
 {
     int ret    = -1;
     int result = 0;
@@ -347,14 +384,19 @@ int id_mgr_del_group_openid(ID_MGR_HANDLE handle, char *id)
     if (0 == device_is_exist(handle, id))
     {
         debug_error("id %s un-exist \n", id);
-        return -1;
+        return 1;
+    }
+    else if(0 == id_mgr_group_openid_is_exist(handle, gopenid))
+    {
+        debug_error("openid %s un-exist \n", gopenid);
+        return 1;
     }
     else
     {
         // insert
         memset(sq_cmd, 0, sizeof(sq_cmd));
 
-        sprintf(sq_cmd, "update id_table set gopenid='%s' where dev_uuid = '%s'", "null", id);
+        sprintf(sq_cmd, "update id_table set gopenid='%s' where dev_uuid = '%s'", "", id);
 
         pthread_mutex_lock(&handle->mutex);
         result = sqlite3_exec(handle->id_db, sq_cmd, 0, 0, &errmsg);
@@ -362,12 +404,13 @@ int id_mgr_del_group_openid(ID_MGR_HANDLE handle, char *id)
 
         if (SQLITE_OK == result)
         {
-            debug_print("insert dev: %s openid:%s success \n", id, "null");
+            debug_print("delete dev: %s openid:%s success \n", id, "");
             ret = 0;
         }
         else
         {
-            debug_error("insert dev: %s openid:%s failed \n", id, "null");
+            debug_error("delete dev: %s openid:%s failed \n", id, "");
+            ret = 2;
         }
     }
 
@@ -724,7 +767,7 @@ static int group_openid_is_exist(ID_MGR_HANDLE handle, char * openid)
     int nRow, nColumn;
 
     memset(sq_cmd, 0, sizeof(sq_cmd));
-    sprintf(sq_cmd, "select id from id_table where gopenid = '%s'", openid);
+    sprintf(sq_cmd, "select gopenid from id_table where gopenid = '%s'", openid);
     result = sqlite3_get_table(handle->id_db, sq_cmd, &dbResult, &nRow, &nColumn, &errmsg);
     if (SQLITE_OK == result)
     {

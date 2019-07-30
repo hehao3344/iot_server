@@ -22,7 +22,7 @@ CLT_PARAM_HANDLE clt_param_create(int max_clt_count);
 void clt_param_set_sock_exit_cb(CLT_PARAM_HANDLE handle, sock_exit_callback cb, void *arg);
 int clt_param_add_connect_sock(CLT_PARAM_HANDLE handle, int sock_fd);
 int clt_param_bind(CLT_PARAM_HANDLE handle,  char * dev_uuid, char * openid);
-int clt_param_unbind(CLT_PARAM_HANDLE handle,  char * openid);
+int clt_param_unbind(CLT_PARAM_HANDLE handle, char * dev_id, char * openid);
 int clt_param_get_dev_uuid_by_openid(CLT_PARAM_HANDLE handle, char * openid, char * buf, int buf_len);
 int clt_param_get_product_key_by_openid(CLT_PARAM_HANDLE handle, char * openid, char * buf, int buf_len);
 int clt_param_get_dev_secret_by_openid(CLT_PARAM_HANDLE handle, char * openid, char * buf, int buf_len);
