@@ -26,7 +26,7 @@ int gohead_apps_init(void)
     id_mgr_update_dev_name(hid_mgr, "WX00000001", "湖南长沙");
     id_mgr_update_online_time(hid_mgr, "WX00000001", "2019-06-08 18:00:00");
     id_mgr_update_offline_time(hid_mgr, "WX00000001", "2019-06-08 18:10:26");
-    id_mgr_add_group_openid(hid_mgr, "WX00000001", "ogDt75W7bJt-DTubZvPFrQCZ8Y58");
+    // id_mgr_add_group_openid(hid_mgr, "WX00000001", "ogDt75W7bJt-DTubZvPFrQCZ8Y58");
 
 
     websDefineJst("dev_list", dev_list_jst);

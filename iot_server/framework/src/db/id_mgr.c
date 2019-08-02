@@ -388,7 +388,24 @@ int id_mgr_del_group_openid(ID_MGR_HANDLE handle, char *id, char * gopenid)
     }
     else if(0 == id_mgr_group_openid_is_exist(handle, gopenid))
     {
-        debug_error("openid %s un-exist \n", gopenid);
+        debug_error("openid %s un-exist clearing null openid \n", gopenid);
+
+        memset(sq_cmd, 0, sizeof(sq_cmd));
+        sprintf(sq_cmd, "update id_table set gopenid='%s' where dev_uuid = '%s'", "", id);
+
+        pthread_mutex_lock(&handle->mutex);
+        result = sqlite3_exec(handle->id_db, sq_cmd, 0, 0, &errmsg);
+        pthread_mutex_unlock(&handle->mutex);
+
+        if (SQLITE_OK == result)
+        {
+            debug_print("delete dev: %s openid: %s success \n", id, "");
+        }
+        else
+        {
+            debug_error("delete dev: %s openid: %s failed \n", id, "");
+        }
+
         return 1;
     }
     else

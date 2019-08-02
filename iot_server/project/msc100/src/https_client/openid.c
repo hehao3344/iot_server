@@ -8,6 +8,7 @@
 #include <core/core.h>
 
 #include "https_client.h"
+#include "db/id_mgr.h"
 #include "openid.h"
 
 #define WX_GET_OPENID_PORT  443
@@ -35,6 +36,8 @@ typedef struct _OPENID_OBJECT
     RTHREAD_HANDLE   rthread_flush_center;
     TTASK_HANDLE     ttask_flush_center;
 
+    ID_MGR_HANDLE    hid_mgr;
+
 } OPENID_OBJECT;
 
 static OPENID_OBJECT * instance(void);
@@ -48,6 +51,12 @@ OPENID_HANDLE openid_create(void)
     {
         debug_error("not enough memory \n");
         return NULL;
+    }
+    handle->hid_mgr = id_mgr_create();
+    if (NULL == handle->hid_mgr)
+    {
+        debug_error("id_mgr_create failed \n");
+        goto create_failed;
     }
 
     // for client communication.
@@ -142,7 +151,7 @@ void openid_destroy(OPENID_HANDLE handle)
         rthread_free(handle->rthread_flush_center, handle->ttask_flush_center);
         handle->ttask_flush_center = NULL;
     }
-
+    id_mgr_destroy(handle->hid_mgr);
     free(handle);
 }
 
@@ -241,27 +250,47 @@ static void openid_thread_center(long param)
                         else
                         {
                             char open_id[64] = {0};
-                            char send_buf[256] = {0};
-                            #define NGINX_HTTP_RESPONSE   "HTTP/1.1 200 OK\n\
+                            char send_buf[512] = {0};
+#define NGINX_HTTP_RESPONSE   "HTTP/1.1 200 OK\n\
 Date: Mon, 30 Jul 2019 08:50:55 GMT \n\
 Cache-Control:  no-cache  \n\
 Connection: keep-alive  \r\n\r\n\
-{\"status\":\"%d\",\"openid\":\"%s\"}"
-
+{\"code\":\"%d\",\
+\"openid\":\"%s\",\
+\"device_name\":\"%s\",\
+\"product_key\":\"%s\",\
+\"dev_secret\":\"%s\"\
+}"
                             // {"session_key":"P8CTtsbaadhyEQRWOvJ4YA==","openid":"ogDt75W7bJt-DTubZvPFrQCZ8Y58"}
                             char * open_id_head = strstr(post_recv_buf, "\"openid\":\"");
                             char * open_id_tail = strstr(post_recv_buf, "\"}");
 
                             if ((NULL != open_id_head) && (NULL != open_id_tail) && ((open_id_tail - (open_id_head + strlen("\"openid\":\""))) < sizeof(open_id)))
                             {
+                                char dev_uuid[20] = {0};
+                                char product_key[32] = {0};
+                                char dev_secret[64] = {0};
+
                                 open_id_head += strlen("\"openid\":\"");
                                 memset(open_id, 0, sizeof(open_id));
                                 memcpy(open_id, open_id_head, open_id_tail - open_id_head);
-                                snprintf(send_buf, sizeof(send_buf), NGINX_HTTP_RESPONSE, 1, open_id);
+
+                                if ((0 == id_mgr_get_uuid_by_group_openid(handle->hid_mgr, open_id, dev_uuid, sizeof(dev_uuid))) &&
+                                    (0 == id_mgr_get_product_key_by_group_openid(handle->hid_mgr, open_id, product_key, sizeof(product_key))) &&
+                                    (0 == id_mgr_get_dev_secret_by_group_openid(handle->hid_mgr, open_id, dev_secret, sizeof(dev_secret))))
+                                {
+                                    snprintf(send_buf, sizeof(send_buf), NGINX_HTTP_RESPONSE, 0,  open_id, dev_uuid, product_key, dev_secret);
+                                }
+                                else
+                                {
+                                    /* Œ¥∞Û∂® */
+                                    snprintf(send_buf, sizeof(send_buf), NGINX_HTTP_RESPONSE, -1,  open_id, "null", "null", "null");
+                                }
                             }
                             else
                             {
-                                snprintf(send_buf, sizeof(send_buf), NGINX_HTTP_RESPONSE, 0, "null");
+                                /* openidªÒ»° ß∞‹ */
+                                snprintf(send_buf, sizeof(send_buf), NGINX_HTTP_RESPONSE, -2,  "null", "null", "null", "null");
                             }
 
                             debug_info("get openid = %s send %s \n", open_id, send_buf);

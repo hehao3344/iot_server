@@ -55,8 +55,8 @@ CLT_PARAM_HANDLE clt_param_create(int max_clt_count)
     }
 
     //id_mgr_add_device(handle->hid_mgr, "10001122334455");
-    id_mgr_add_group_openid(handle->hid_mgr, "10001122334455", "ogDt75W7bJt-DTubZvPFrQCZ8Y58");
-    id_mgr_add_group_openid(handle->hid_mgr, "1084f3eb83a7aa", "ogDt75W7bJt-DTubZvPFrQCZ8Y58");
+    //id_mgr_add_group_openid(handle->hid_mgr, "10001122334455", "ogDt75W7bJt-DTubZvPFrQCZ8Y58");
+    //id_mgr_add_group_openid(handle->hid_mgr, "1084f3eb83a7aa", "ogDt75W7bJt-DTubZvPFrQCZ8Y58");
 
     handle->hclient = create_hashtable(max_clt_count, common_tbl_to_hash, common_tbl_keys_equal_func);
 
