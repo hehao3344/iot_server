@@ -15,6 +15,7 @@ typedef enum
     E_DEV_REGISTER = 0x01,  /* 注册 */
     E_DEV_HEART_BEAT,       /* 设备心跳 */
     E_DEV_INFORM_STATUS,    /* 主动上报设备消息 */
+    E_DEV_FW_REQUEST,       /* ota */
 } E_DEV_MSG;
 
 typedef struct _MSG_CB_PARAM

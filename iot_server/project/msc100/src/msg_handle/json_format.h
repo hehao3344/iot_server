@@ -79,7 +79,6 @@ extern "C"
 \"code\":%d\
 }"
 
-
 // 服务器 子设备
 #define  JSON_IOTS_CC_SET_SWITCH_REQ    "{\
 \"method\":\"down_msg\", \
@@ -96,11 +95,17 @@ extern "C"
 }\
 }"
 
-
+#define  JSON_IOTS_CC_OTA_REQ "{\
+\"method\":\"down_msg\",\
+\"cc_uuid\":\"%s\",\
+\"req_id”: %d,\
+\"code\":%d,\
+\"fw_version\":\"v2.0.0\",\
+\"url\":\"http://10.101.70.32:8088/hh_ota.bin\"\
+}"
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

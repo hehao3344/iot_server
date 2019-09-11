@@ -45,6 +45,7 @@ int  dev_param_get_count(DEV_PARAM_HANDLE handle);
 int  dev_param_get_sock_fd(DEV_PARAM_HANDLE handle, char *id, int *sock_fd);
 void dev_param_dump(DEV_PARAM_HANDLE handle);
 void dev_param_destroy(DEV_PARAM_HANDLE handle);
+int  dev_param_id_is_exist(DEV_PARAM_HANDLE handle, char *cc_id);
 
 #ifdef __cplusplus
 }

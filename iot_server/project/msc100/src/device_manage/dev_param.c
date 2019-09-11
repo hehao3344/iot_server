@@ -345,6 +345,11 @@ int dev_param_id_is_valid(DEV_PARAM_HANDLE handle, char *cc_id)
     return ret;
 }
 
+int dev_param_id_is_exist(DEV_PARAM_HANDLE handle, char *cc_id)
+{
+    return id_mgr_id_is_exist(handle->hid_mgr, cc_id);
+}
+
 void dev_param_keep_alive(DEV_PARAM_HANDLE handle, char *cc_id)
 {
     GW_DEVICE * gw_dev = get_device_by_id(handle, cc_id);

@@ -28,12 +28,14 @@ typedef struct _JSON_HANDLE_PARAM
 static int dev_up_msg_register(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
 static int dev_up_msg_heart_beat(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
 static int dev_up_msg_update_status(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
+static int dev_up_msg_fw_request(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg);
 
 static JSON_HANDLE_PARAM json_handle_tbl[] =
 {
     {"up_msg",      "register",         dev_up_msg_register,        1},  /* 注册 */
     {"up_msg",      "heart_beat",       dev_up_msg_heart_beat,      1},  /* 心跳 */
     {"report_msg",  "updata_status",    dev_up_msg_update_status,   0},  /* 上报消息 */
+    {"up_msg",      "fw_request",       dev_up_msg_fw_request,      1},  /* OTA */
 };
 
 JMH_HANDLE json_msg_handle_create(void)
@@ -415,6 +417,102 @@ static int dev_up_msg_update_status(void * arg, char *buffer, char *resp_buf, in
         }
     }
 
+    if (NULL != handle->cb)
+    {
+        handle->cb(handle->arg, &cb_param, ext_arg);
+        ret = 0;
+    }
+    cJSON_Delete(root);
+
+    return ret;
+}
+
+
+
+#if 0
+{
+"method":"up_msg",
+"cc_uuid":"01001122334455",
+"req_id":10000,
+"attr":
+{
+"cmd":"fw_request",
+"version":"v1.0.0"
+}
+}
+#endif
+static int dev_up_msg_fw_request(void * arg, char *buffer, char *resp_buf, int buf_len, void * ext_arg)
+{
+    int ret = -1;
+    cJSON *root = NULL;
+    cJSON *sub_obj = NULL;
+    MSG_CB_PARAM  cb_param;
+    JSON_MSG_HDL_OBJECT * handle = (JSON_MSG_HDL_OBJECT *)arg;
+    if (NULL == handle)
+    {
+        return -1;
+    }
+
+    memset(&cb_param, 0, sizeof(MSG_CB_PARAM));
+    root = cJSON_Parse(buffer);
+    if (NULL == root)
+    {
+        debug_print("cJSON_Parse error!\n");
+        return -1;
+    }
+
+    sub_obj = cJSON_GetObjectItem(root, "method");
+    if (NULL != sub_obj)
+    {
+        if (0 != strcmp(sub_obj->valuestring, "up_msg"))
+        {
+            return -1;
+        }
+    }
+    else
+    {
+        return -1;
+    }
+
+    sub_obj = cJSON_GetObjectItem(root, "cc_uuid");
+    if (NULL != sub_obj)
+    {
+        if (strlen(sub_obj->valuestring) < sizeof(cb_param.cc_uuid))
+        {
+            strncpy(cb_param.cc_uuid, sub_obj->valuestring, sizeof(cb_param.cc_uuid));
+        }
+    }
+    sub_obj = cJSON_GetObjectItem(root, "req_id");
+    if (NULL != sub_obj)
+    {
+        cb_param.req_id = sub_obj->valueint;
+    }
+
+    cJSON * attr_obj = cJSON_GetObjectItem(root, "attr");
+    if (NULL == attr_obj)
+    {
+        debug_error("can't find attr \n");
+        return -1;
+    }
+
+    cJSON * cmd_obj = cJSON_GetObjectItem(attr_obj, "cmd");
+    if (NULL != cmd_obj)
+    {
+        if (0 == strcmp(cmd_obj->valuestring, "fw_request"))
+        {
+            cb_param.e_msg = E_DEV_FW_REQUEST;
+        }
+    }
+    cJSON * ver_obj = cJSON_GetObjectItem(attr_obj, "version");
+    if (NULL != ver_obj)
+    {
+        if (strlen(ver_obj->valuestring) < sizeof(cb_param.str_arg))
+        {
+            strncpy(cb_param.str_arg[0], ver_obj->valuestring, sizeof(cb_param.str_arg[0]));
+        }
+    }
+
+    cb_param.req_id = sub_obj->valueint;
     if (NULL != handle->cb)
     {
         handle->cb(handle->arg, &cb_param, ext_arg);

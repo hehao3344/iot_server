@@ -12,7 +12,7 @@
 #include <crypto/base64.h>
 #include <crypto/int_lib.h>
 
-
+#include "msg_handle/json_format.h"
 #include "msg_handle/json_msg_handle.h"
 #include "hash_value.h"
 #include "ws.h"
@@ -394,6 +394,29 @@ static int json_msg_fn(void * arg, MSG_CB_PARAM * cb_param, void * ext_arg)
                 sub_dev.on_off[i]  = cb_param->int_arg2[i];
             }
             dev_param_update(handle->hdev_param, cb_param->cc_uuid, &sub_dev);
+            break;
+        }
+        case E_DEV_FW_REQUEST:
+        {
+            char rest_buf[256] = {0};
+            int sock_fd = *(int *)ext_arg;
+
+            if (!dev_param_id_is_exist(handle->hdev_param, cb_param->cc_uuid))
+            {
+                debug_info("warnning: id %s unexist \n", cb_param->cc_uuid);
+            }
+
+            snprintf(rest_buf, sizeof(rest_buf), JSON_IOTS_CC_OTA_REQ, cb_param->cc_uuid, cb_param->req_id, 0);
+
+            if ((strlen(rest_buf) == tcp_send_timeout(sock_fd, rest_buf, strlen(rest_buf), 2000)))
+            {
+                debug_info("tcp send buffer %s success \n", rest_buf);
+            }
+            else
+            {
+                debug_info("tcp send buffer %s failed \n", rest_buf);
+            }
+            tcp_close(sock_fd);
             break;
         }
         default:
