@@ -27,6 +27,7 @@ FRAMEWORK_DB_DIR       = $(FRAMEWORK_SRC_DIR)/db
 FRAMEWORK_JSON_DIR     = $(FRAMEWORK_SRC_DIR)/json
 FRAMEWORK_CRYPTO_DIR   = $(FRAMEWORK_SRC_DIR)/crypto
 FRAMEWORK_LOG_DIR      = $(FRAMEWORK_SRC_DIR)/log
+FRAMEWORK_XML_DIR      = $(FRAMEWORK_SRC_DIR)/xml
 
 ####################################################################################
 # Component source
@@ -49,7 +50,13 @@ COM_FRAMEWORK_SRC =  \
                 $(FRAMEWORK_CRYPTO_DIR)/sha1.c \
                 $(FRAMEWORK_CRYPTO_DIR)/base64.c \
                 $(FRAMEWORK_CRYPTO_DIR)/int_lib.c \
-                $(FRAMEWORK_DB_DIR)/id_mgr.c
+                $(FRAMEWORK_DB_DIR)/id_mgr.c \
+                $(FRAMEWORK_XML_DIR)/tinystr.cpp \
+                $(FRAMEWORK_XML_DIR)/tinyxml.cpp \
+                $(FRAMEWORK_XML_DIR)/tinyxmlerror.cpp \
+                $(FRAMEWORK_XML_DIR)/tinyxmlparser.cpp \
+                $(FRAMEWORK_XML_DIR)/xml_msg.cpp \
+                $(FRAMEWORK_XML_DIR)/xml_api.cpp
 
 # Local include directory
 LOCAL_INC           += -Iinclude -I$(FRAMEWORK_SRC_DIR)  $(EXTERNAL_INC_FLAGS)
@@ -68,8 +75,8 @@ CXXFLAGS            += $(LOCAL_CPPINC)  $(LOCAL_DEFINE)
 
 SRCS                += $(COM_FRAMEWORK_SRC)
 
-#objects             = $(patsubst %.S,%,$(patsubst %.cpp,%,$(patsubst %.c,%,$(SRCS))))
-objects             = $(patsubst %.c,%,$(SRCS))
+objects             = $(patsubst %.S,%,$(patsubst %.cpp,%,$(patsubst %.c,%,$(SRCS))))
+#objects             = $(patsubst %.c,%,$(SRCS))
 
 target              = framework
 target_version      = 1.00

@@ -7,10 +7,10 @@
 #include <sys/epoll.h>
 
 #include <core/core.h>
-
 #include <crypto/sha1.h>
 #include <crypto/base64.h>
 #include <crypto/int_lib.h>
+#include <xml/xml_api.h>
 
 #include "msg_handle/json_format.h"
 #include "msg_handle/json_msg_handle.h"
@@ -406,7 +406,20 @@ static int json_msg_fn(void * arg, MSG_CB_PARAM * cb_param, void * ext_arg)
                 debug_info("warnning: id %s unexist \n", cb_param->cc_uuid);
             }
 
-            snprintf(rest_buf, sizeof(rest_buf), JSON_IOTS_CC_OTA_REQ, cb_param->cc_uuid, cb_param->req_id, 0);
+            XML_HANDLE xml_handle = xml_create("ota.xml");
+            if (NULL != xml_handle)
+            {
+                char * ver_string   = xml_get_string(xml_handle, "firmware", "version", "v0.0.0");
+                char * url_string   = xml_get_string(xml_handle, "firmware", "url",     "http://www.iowin.cn:8080/hh_ota.bin");
+                snprintf(rest_buf, sizeof(rest_buf), JSON_IOTS_CC_OTA_REQ, cb_param->cc_uuid, cb_param->req_id, 0, ver_string, url_string);
+
+                xml_destroy(xml_handle);
+            }
+            else
+            {
+                snprintf(rest_buf, sizeof(rest_buf), JSON_IOTS_CC_OTA_REQ, cb_param->cc_uuid, cb_param->req_id, -1, "v0.0.0", "");
+            }
+            debug_info("send firmware string %s \n", rest_buf);
 
             if ((strlen(rest_buf) == tcp_send_timeout(sock_fd, rest_buf, strlen(rest_buf), 2000)))
             {

@@ -98,10 +98,10 @@ extern "C"
 #define  JSON_IOTS_CC_OTA_REQ "{\
 \"method\":\"down_msg\",\
 \"cc_uuid\":\"%s\",\
-\"req_id¡±: %d,\
+\"req_id\":%d,\
 \"code\":%d,\
-\"fw_version\":\"v2.0.0\",\
-\"url\":\"http://10.101.70.32:8088/hh_ota.bin\"\
+\"fw_version\":\"%s\",\
+\"url\":\"%s\"\
 }"
 
 #ifdef __cplusplus

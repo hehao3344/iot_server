@@ -17,6 +17,9 @@
 
 #include "httpd/goahead.h"
 
+#include <xml/xml_api.h>
+#include "msg_handle/json_format.h"
+
 int main(int argc, char** argv)
 {
     //debug_init(IOT_MODULE_IOT_SERVER, IOT_DEBUG_LEVEL_INFO, (char *)"iot_server");
@@ -24,8 +27,6 @@ int main(int argc, char** argv)
     //https_client_unit_test();
     //openid_unit_test();
     goahead_init();
-
-    //return 0;
 
     //websockets_unit_test();
 
