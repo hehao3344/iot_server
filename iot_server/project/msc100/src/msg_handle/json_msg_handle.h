@@ -9,6 +9,7 @@ extern "C"
 #endif
 
 #define MAX_STRING_LEN  32
+#define MAX_APP_ID_LEN  32
 
 typedef enum
 {
@@ -24,6 +25,7 @@ typedef struct _MSG_CB_PARAM
     int  req_id;
     char cc_uuid[MAX_ID_LEN];
     char str_arg[MAX_ID_ARRAY][MAX_STRING_LEN];
+    char app_id[MAX_APP_ID_LEN];
     int  int_arg1[MAX_ID_ARRAY];
     int  int_arg2[MAX_ID_ARRAY];
 } MSG_CB_PARAM;

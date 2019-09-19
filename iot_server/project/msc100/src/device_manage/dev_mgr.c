@@ -406,12 +406,28 @@ static int json_msg_fn(void * arg, MSG_CB_PARAM * cb_param, void * ext_arg)
                 debug_info("warnning: id %s unexist \n", cb_param->cc_uuid);
             }
 
+            debug_info("id %s app_id %s \n", cb_param->cc_uuid, cb_param->app_id);
+
             XML_HANDLE xml_handle = xml_create("ota.xml");
             if (NULL != xml_handle)
             {
-                char * ver_string   = xml_get_string(xml_handle, "firmware", "version", "v0.0.0");
-                char * url_string   = xml_get_string(xml_handle, "firmware", "url",     "http://www.iowin.cn:8080/hh_ota.bin");
-                snprintf(rest_buf, sizeof(rest_buf), JSON_IOTS_CC_OTA_REQ, cb_param->cc_uuid, cb_param->req_id, 0, ver_string, url_string);
+                if (0 == strcmp(cb_param->app_id, "app00000001"))
+                {
+                    char * ver_string    = xml_get_string(xml_handle, "firmware", "version", "v0.0.0");
+                    char * url_string    = xml_get_string(xml_handle, "firmware", "url",     "http://www.iowin.cn:8080/hh_ota.bin");
+                    snprintf(rest_buf, sizeof(rest_buf), JSON_IOTS_CC_OTA_REQ, cb_param->cc_uuid, cb_param->req_id, 0, ver_string, url_string);
+                }
+                else if (0 == strcmp(cb_param->app_id, "app00000002"))
+                {
+                    char * ver_string    = xml_get_string(xml_handle, "firmware1", "version", "v0.0.0");
+                    char * url_string    = xml_get_string(xml_handle, "firmware1", "url",     "http://www.iowin.cn:8080/hh_ota.bin");
+                    snprintf(rest_buf, sizeof(rest_buf), JSON_IOTS_CC_OTA_REQ, cb_param->cc_uuid, cb_param->req_id, 0, ver_string, url_string);
+                }
+                else
+                {
+                    debug_info("got a wrong app-id \n");
+                    snprintf(rest_buf, sizeof(rest_buf), JSON_IOTS_CC_OTA_REQ, cb_param->cc_uuid, cb_param->req_id, -1, "v0.0.0", "unexist");
+                }
 
                 xml_destroy(xml_handle);
             }

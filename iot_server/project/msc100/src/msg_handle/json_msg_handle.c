@@ -436,8 +436,10 @@ static int dev_up_msg_update_status(void * arg, char *buffer, char *resp_buf, in
 "req_id":10000,
 "attr":
 {
+
 "cmd":"fw_request",
-"version":"v1.0.0"
+"version":"v1.0.0",
+"app_id":"app00000001"
 }
 }
 #endif
@@ -511,7 +513,14 @@ static int dev_up_msg_fw_request(void * arg, char *buffer, char *resp_buf, int b
             strncpy(cb_param.str_arg[0], ver_obj->valuestring, sizeof(cb_param.str_arg[0]));
         }
     }
-
+    cJSON * app_id_obj = cJSON_GetObjectItem(attr_obj, "app_id");
+    if (NULL != app_id_obj)
+    {
+        if (strlen(app_id_obj->valuestring) < sizeof(cb_param.app_id))
+        {
+            strncpy(cb_param.app_id, app_id_obj->valuestring, sizeof(cb_param.app_id));
+        }
+    }
     cb_param.req_id = sub_obj->valueint;
     if (NULL != handle->cb)
     {
